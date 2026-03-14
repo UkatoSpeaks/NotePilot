@@ -19,7 +19,7 @@ export function Card({ children, className, animate = true }: CardProps) {
       whileInView={animate ? { opacity: 1, y: 0 } : undefined}
       viewport={{ once: true }}
       className={cn(
-        "bg-white rounded-[2rem] border border-border shadow-sm hover:shadow-xl hover:shadow-primary/5 transition-all duration-300",
+        "bg-white rounded-4xl border border-border shadow-sm hover:shadow-xl hover:shadow-primary/5 transition-all duration-300",
         className
       )}
     >

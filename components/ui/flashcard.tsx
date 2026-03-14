@@ -15,7 +15,7 @@ export function Flashcard({ front, back, category }: FlashcardProps) {
 
   return (
     <div 
-        className="relative w-full aspect-[4/3] perspective-1000 cursor-pointer group"
+        className="relative w-full aspect-4/3 perspective-1000 cursor-pointer group"
         onClick={() => setIsFlipped(!isFlipped)}
     >
       <motion.div

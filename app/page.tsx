@@ -25,12 +25,18 @@ import {
   Award
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
+import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
+
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 export default function LandingPage() {
   const heroVisualRef = useRef(null);
   const headlineRef = useRef(null);
+  const scrollRef = useRef(null);
 
   useEffect(() => {
     // Hero Entrance Animations
@@ -62,6 +68,36 @@ export default function LandingPage() {
       repeat: -1,
       repeatDelay: 2
     });
+
+    // Floating animation for background blobs
+    gsap.to(".floating-blob", {
+      y: 30,
+      x: 20,
+      duration: 8,
+      repeat: -1,
+      yoyo: true,
+      ease: "sine.inOut",
+      stagger: 1
+    });
+
+    // Section Reveals
+    gsap.utils.toArray(".reveal-section").forEach((section: any) => {
+      gsap.from(section, {
+        scrollTrigger: {
+          trigger: section,
+          start: "top 80%",
+          toggleActions: "play none none none"
+        },
+        y: 60,
+        opacity: 0,
+        duration: 1,
+        ease: "power3.out"
+      });
+    });
+
+    return () => {
+      ScrollTrigger.getAll().forEach(t => t.kill());
+    };
   }, []);
 
   return (
@@ -70,7 +106,7 @@ export default function LandingPage() {
       <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-7xl">
         <div className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-[32px] px-8 h-20 flex items-center justify-between shadow-[0_8px_32px_0_rgba(45,106,79,0.08)]">
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-11 h-11 bg-gradient-to-tr from-[#2D6A4F] to-[#40916c] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-green-900/20 transform group-hover:rotate-[15deg] transition-all duration-500">
+            <div className="w-11 h-11 bg-linear-to-tr from-[#2D6A4F] to-[#40916c] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-green-900/20 transform group-hover:rotate-15 transition-all duration-500">
               <Zap className="w-6 h-6 fill-current" />
             </div>
             <div className="flex flex-col">
@@ -129,15 +165,24 @@ export default function LandingPage() {
               </Button>
             </div>
             
-            <div className="mt-12 flex items-center gap-4 hero-cta opacity-60">
+            <div className="mt-12 flex items-center gap-4 hero-cta opacity-80">
               <div className="flex -space-x-4">
                 {[1,2,3,4].map(i => (
-                  <div key={i} className="w-10 h-10 rounded-full border-4 border-white bg-gray-200 overflow-hidden relative">
+                  <motion.div 
+                    key={i} 
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 1 + (i * 0.1) }}
+                    className="w-10 h-10 rounded-full border-4 border-white bg-gray-200 overflow-hidden relative shadow-sm"
+                  >
                     <div className={`absolute inset-0 bg-blue-${i*100+200}`} />
-                  </div>
+                  </motion.div>
                 ))}
               </div>
-              <p className="text-sm font-bold">Joined by 10,000+ Students</p>
+              <p className="text-sm font-bold flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                Joined by 10,000+ Students
+              </p>
             </div>
           </div>
 
@@ -169,7 +214,7 @@ export default function LandingPage() {
                     </div>
                     
                     {/* Animated scanning line */}
-                    <div className="h-px bg-gradient-to-r from-transparent via-orange-400 to-transparent w-full relative">
+                    <div className="h-px bg-linear-to-r from-transparent via-orange-400 to-transparent w-full relative">
                         <div className="absolute inset-0 bg-orange-400 blur-sm opacity-50" />
                     </div>
                   </div>
@@ -214,13 +259,15 @@ export default function LandingPage() {
             
             {/* Background elements */}
             <div className="absolute -top-10 -right-10 w-full h-full border-2 border-dashed border-[#F9A11B]/20 rounded-full animate-spin-slow" />
-            <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-[#F9A11B] rounded-full blur-[80px] opacity-20 -z-10" />
+            <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-[#F9A11B] rounded-full blur-[80px] opacity-20 z-0" />
+            <div className="absolute top-1/4 -right-1/4 w-48 h-48 bg-[#2D6A4F]/10 rounded-full blur-3xl floating-blob" />
+            <div className="absolute -bottom-1/4 -left-1/4 w-64 h-64 bg-orange-400/10 rounded-full blur-3xl floating-blob" />
           </div>
         </div>
       </section>
 
       {/* 2. Problem Section */}
-      <section className="py-24 bg-white px-6">
+      <section className="py-24 bg-white px-6 reveal-section">
         <div className="max-w-7xl mx-auto text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-black mb-6 text-[#2D6A4F]">Studying Shouldn't Be This Hard</h2>
           <p className="text-xl text-[#666666] font-medium max-w-2xl mx-auto italic">
@@ -229,65 +276,62 @@ export default function LandingPage() {
         </div>
         
         <div className="grid md:grid-cols-4 gap-8 max-w-7xl mx-auto">
-          <ProblemCard 
-            icon={<Clock className="w-8 h-8" />}
-            title="Wasted Hours"
-            desc="Making notes takes 70% of your study time. Use that time to actually learn."
-          />
-          <ProblemCard 
-            icon={<Brain className="w-8 h-8" />}
-            title="Revision Stress"
-            desc="Panic before exams is real when your notes are messy or incomplete."
-          />
-          <ProblemCard 
-            icon={<BookOpen className="w-8 h-8" />}
-            title="Textbook Overload"
-            desc="Drowning in 500-page books? We extract only what you need to know."
-          />
-          <ProblemCard 
-            icon={<Layout className="w-8 h-8" />}
-            title="Disorganized Mess"
-            desc="Loose papers and lost files make it impossible to track progress."
-          />
+          {[
+            { icon: <Clock className="w-8 h-8" />, title: "Wasted Hours", desc: "Making notes takes 70% of your study time." },
+            { icon: <Brain className="w-8 h-8" />, title: "Revision Stress", desc: "Panic before exams is real when notes are messy." },
+            { icon: <BookOpen className="w-8 h-8" />, title: "Textbook Overload", desc: "Drowning in 500-page books? We extract the core." },
+            { icon: <Layout className="w-8 h-8" />, title: "Disorganized Mess", desc: "Loose papers and lost files are a thing of the past." }
+          ].map((item, idx) => (
+            <ProblemCard 
+              key={idx}
+              icon={item.icon}
+              title={item.title}
+              desc={item.desc}
+              index={idx}
+            />
+          ))}
         </div>
       </section>
 
       {/* 3. Solution Section */}
-      <section id="features" className="py-24 px-6 bg-[#FDFCF8] overflow-hidden">
+      <section id="features" className="py-24 px-6 bg-[#FDFCF8] overflow-hidden reveal-section">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col lg:flex-row gap-16 items-center">
-             <div className="lg:w-1/2">
+             <motion.div 
+               initial={{ opacity: 0, x: -50 }}
+               whileInView={{ opacity: 1, x: 0 }}
+               transition={{ duration: 0.8 }}
+               className="lg:w-1/2"
+             >
                 <h2 className="text-5xl md:text-6xl font-black mb-8 leading-tight">
                   Your AI <br/> <span className="text-[#F9A11B]">Study Assistant</span>
                 </h2>
                 <div className="space-y-6">
-                  <FeatureRow icon={<CheckCircle2 className="text-green-500" />} text="Generate Notes instantly from any topic" />
-                  <FeatureRow icon={<CheckCircle2 className="text-green-500" />} text="One-click flashcard generation for memorization" />
-                  <FeatureRow icon={<CheckCircle2 className="text-green-500" />} text="AI-powered Exam Question Generator" />
-                  <FeatureRow icon={<CheckCircle2 className="text-green-500" />} text="Smart PDF-to-Notes converter" />
-                  <FeatureRow icon={<CheckCircle2 className="text-green-500" />} text="Quick Revision summaries for 5-minute study" />
+                  {["Generate Notes instantly", "one-click flashcards", "AI Question Generator", "Smart PDF Converter", "Revision Summaries"].map((text, i) => (
+                    <FeatureRow key={i} icon={<CheckCircle2 className="text-green-500" />} text={text} index={i} />
+                  ))}
                 </div>
-                <Button className="mt-12 bg-[#2D6A4F] text-white rounded-full px-10 py-7 text-lg font-black">
+                <Button className="mt-12 bg-[#2D6A4F] text-white rounded-full px-10 py-7 text-lg font-black hover:scale-105 active:scale-95 transition-transform">
                   Start Learning Now
                 </Button>
-             </div>
+             </motion.div>
              <div className="lg:w-1/2 grid grid-cols-2 gap-6 relative">
                 <div className="space-y-6">
-                   <ServiceCard icon={<FileText />} title="AI Notes" desc="Structured & clean" color="bg-orange-100" />
-                   <ServiceCard icon={<Brain />} title="Flashcards" desc="Active recall" color="bg-green-100" />
+                   <ServiceCard icon={<FileText />} title="AI Notes" desc="Structured & clean" color="bg-orange-100" index={0} />
+                   <ServiceCard icon={<Brain />} title="Flashcards" desc="Active recall" color="bg-green-100" index={1} />
                 </div>
                 <div className="space-y-6 pt-12">
-                   <ServiceCard icon={<MessageSquare />} title="Q&A" desc="Exam practice" color="bg-blue-100" />
-                   <ServiceCard icon={<Zap />} title="Revision" desc="Lightning fast" color="bg-purple-100" />
+                   <ServiceCard icon={<MessageSquare />} title="Q&A" desc="Exam practice" color="bg-blue-100" index={2} />
+                   <ServiceCard icon={<Zap />} title="Revision" desc="Lightning fast" color="bg-purple-100" index={3} />
                 </div>
-                <div className="absolute -z-10 bg-[#F9A11B]/10 w-[140%] h-[140%] -top-[20%] -left-[20%] rounded-full blur-3xl" />
+                <div className="absolute -z-10 bg-[#F9A11B]/10 w-[140%] h-[140%] -top-[20%] -left-[20%] rounded-full blur-3xl floating-blob" />
              </div>
           </div>
         </div>
       </section>
 
       {/* 4. How It Works Section */}
-      <section id="how-it-works" className="py-24 bg-[#2D6A4F] text-white px-6">
+      <section id="how-it-works" className="py-24 bg-[#2D6A4F] text-white px-6 reveal-section">
         <div className="max-w-7xl mx-auto text-center mb-20">
           <h2 className="text-4xl md:text-5xl font-black mb-6">How It Works</h2>
           <p className="text-white/60 text-lg font-bold">From confused to exam-ready in 3 easy steps.</p>
@@ -296,14 +340,14 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-12 relative">
           <div className="hidden md:block absolute top-12 left-0 w-full h-1 border-t-4 border-dashed border-white/10 z-0" />
           
-          <StepCard number="1" title="Enter Topic" desc="Type in any subject or upload your school PDF." />
-          <StepCard number="2" title="AI MAGIC" desc="Our engine generates structured headings and key points." />
-          <StepCard number="3" title="Study & Ace" desc="Review flashcards and test yourself with AI questions." />
+          <StepCard number="1" title="Enter Topic" desc="Type in any subject or upload your school PDF." index={0} />
+          <StepCard number="2" title="AI MAGIC" desc="Our engine generates structured headings and key points." index={1} />
+          <StepCard number="3" title="Study & Ace" desc="Review flashcards and test yourself with AI questions." index={2} />
         </div>
       </section>
 
       {/* 6. Example Output Section */}
-      <section className="py-24 px-6 max-w-7xl mx-auto">
+      <section className="py-24 px-6 max-w-7xl mx-auto reveal-section">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-black mb-4">See the <span className="text-[#F9A11B]">Result</span> Yourself</h2>
           <p className="text-[#666666] font-bold">Actual output for the topic: "Photosynthesis"</p>
@@ -365,7 +409,7 @@ export default function LandingPage() {
       </section>
 
       {/* 9. Pricing Section */}
-      <section id="pricing" className="py-24 bg-[#FDFCF8] px-6">
+      <section id="pricing" className="py-24 bg-[#FDFCF8] px-6 reveal-section">
         <div className="max-w-7xl mx-auto text-center mb-16">
            <h2 className="text-5xl font-black mb-4 text-[#2D6A4F]">Simple Pricing</h2>
            <p className="text-[#666666] font-bold text-lg">Created with a student's budget in mind.</p>
@@ -406,7 +450,7 @@ export default function LandingPage() {
       </section>
 
       {/* 10. Final CTA Section */}
-      <section className="py-24 px-6 text-center">
+      <section className="py-24 px-6 text-center reveal-section">
         <div className="max-w-4xl mx-auto bg-[#F9A11B] p-12 md:p-20 rounded-[60px] relative overflow-hidden">
            <div className="relative z-10">
               <h2 className="text-4xl md:text-6xl font-black text-white mb-8">Start Studying <br/> Smarter Today</h2>
@@ -474,56 +518,76 @@ export default function LandingPage() {
   );
 }
 
-function ProblemCard({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) {
+function ProblemCard({ icon, title, desc, index }: { icon: React.ReactNode, title: string, desc: string, index: number }) {
   return (
     <motion.div 
-      whileHover={{ y: -5 }}
-      className="p-8 bg-[#FDFCF8] rounded-[32px] border-2 border-transparent hover:border-[#F9A11B]/20 transition-all group"
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.1, duration: 0.5 }}
+      whileHover={{ y: -10, scale: 1.02 }}
+      className="p-8 bg-[#FDFCF8] rounded-[32px] border-2 border-transparent hover:border-[#F9A11B]/40 hover:shadow-2xl hover:shadow-orange-500/10 transition-all group cursor-pointer"
     >
-      <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#2D6A4F] mb-6 group-hover:scale-110 group-hover:bg-[#F9A11B] group-hover:text-white transition-all">
+      <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#2D6A4F] mb-6 group-hover:bg-[#F9A11B] group-hover:text-white group-hover:rotate-10 transition-all duration-500">
         {icon}
       </div>
-      <h3 className="text-xl font-black mb-4">{title}</h3>
+      <h3 className="text-xl font-black mb-4 group-hover:text-[#F9A11B] transition-colors">{title}</h3>
       <p className="text-[#666666] font-bold text-sm leading-relaxed">{desc}</p>
     </motion.div>
   );
 }
 
-function ServiceCard({ icon, title, desc, color }: { icon: React.ReactNode, title: string, desc: string, color: string }) {
+function ServiceCard({ icon, title, desc, color, index }: { icon: React.ReactNode, title: string, desc: string, color: string, index: number }) {
   return (
     <motion.div 
-      whileHover={{ scale: 1.05 }}
-      className={`p-10 ${color} rounded-[40px] shadow-xl shadow-black/5 flex flex-col justify-between aspect-square`}
+      initial={{ opacity: 0, scale: 0.9 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.1, duration: 0.5 }}
+      whileHover={{ scale: 1.05, rotate: 2 }}
+      className={`p-10 ${color} rounded-[40px] shadow-xl shadow-black/5 flex flex-col justify-between aspect-square cursor-pointer group`}
     >
-      <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-[#2D6A4F] shadow-sm">
+      <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-[#2D6A4F] shadow-sm group-hover:scale-110 transition-transform">
         {icon}
       </div>
       <div>
-        <h3 className="text-2xl font-black mb-1">{title}</h3>
+        <h3 className="text-2xl font-black mb-1 group-hover:text-[#F9A11B] transition-colors">{title}</h3>
         <p className="font-bold text-[#666666] text-sm">{desc}</p>
       </div>
     </motion.div>
   );
 }
 
-function FeatureRow({ icon, text }: { icon: React.ReactNode, text: string }) {
+function FeatureRow({ icon, text, index }: { icon: React.ReactNode, text: string, index: number }) {
   return (
-    <div className="flex items-center gap-4 group">
-      <div className="scale-125">{icon}</div>
+    <motion.div 
+      initial={{ opacity: 0, x: -20 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.1, duration: 0.5 }}
+      className="flex items-center gap-4 group cursor-default"
+    >
+      <div className="scale-125 group-hover:scale-150 transition-transform duration-300">{icon}</div>
       <p className="text-xl font-black text-[#666666] group-hover:text-[#2D6A4F] transition-colors">{text}</p>
-    </div>
+    </motion.div>
   );
 }
 
-function StepCard({ number, title, desc }: { number: string, title: string, desc: string }) {
+function StepCard({ number, title, desc, index }: { number: string, title: string, desc: string, index: number }) {
   return (
-    <div className="relative z-10 flex flex-col items-center text-center">
-      <div className="w-16 h-16 rounded-full bg-[#F9A11B] border-4 border-white flex items-center justify-center text-2xl font-black mb-6 shadow-xl">
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.5 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.2, type: "spring", stiffness: 100 }}
+      className="relative z-10 flex flex-col items-center text-center group"
+    >
+      <div className="w-16 h-16 rounded-full bg-[#F9A11B] border-4 border-white flex items-center justify-center text-2xl font-black mb-6 shadow-xl group-hover:scale-110 transition-all duration-300">
         {number}
       </div>
       <h3 className="text-2xl font-black mb-4">{title}</h3>
       <p className="text-white/70 font-bold leading-relaxed">{desc}</p>
-    </div>
+    </motion.div>
   );
 }
 

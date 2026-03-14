@@ -23,7 +23,7 @@ export function NoteViewer({ title, subject, sections }: NoteViewerProps) {
       animate={{ opacity: 1, y: 0 }}
       className="bg-white rounded-[2.5rem] border border-border overflow-hidden shadow-2xl shadow-primary/5"
     >
-      <div className="p-8 md:p-12 border-b border-dashed border-border flex flex-col md:flex-row md:items-center justify-between gap-6 bg-gradient-to-br from-white to-muted/30">
+      <div className="p-8 md:p-12 border-b border-dashed border-border flex flex-col md:flex-row md:items-center justify-between gap-6 bg-linear-to-br from-white to-muted/30">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <span className="px-3 py-1 bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest rounded-full">{subject}</span>
@@ -65,7 +65,7 @@ export function NoteViewer({ title, subject, sections }: NoteViewerProps) {
             <ul className="space-y-4">
               {section.content.map((item, i) => (
                 <li key={i} className="flex gap-4 group">
-                  <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:bg-primary/20 transition-colors">
+                  <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-primary/20 transition-colors">
                     <div className="w-1.5 h-1.5 rounded-full bg-secondary group-hover:bg-primary transition-colors" />
                   </div>
                   <p className="text-secondary leading-relaxed font-medium">

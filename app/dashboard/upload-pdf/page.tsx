@@ -9,39 +9,69 @@ import {
   Loader2,
   Sparkles,
   Zap,
-  ShieldCheck
+  ShieldCheck,
+  ArrowRight,
+  Brain,
+  Search,
+  Eye,
+  FileCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
+import { cn } from "@/lib/utils";
+import Link from "next/link";
+
+type UploadStage = "idle" | "uploading" | "analyzing" | "success";
 
 export default function UploadPdfPage() {
   const [file, setFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const [stage, setStage] = useState<UploadStage>("idle");
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [analysisStatus, setAnalysisStatus] = useState("Initializing AI Engine...");
   const [isDragging, setIsDragging] = useState(false);
   
-  const dropZoneRef = useRef<HTMLDivElement>(null);
+  const scannerLineRef = useRef<HTMLDivElement>(null);
   const pulseRef = useRef<HTMLDivElement>(null);
 
+  const analysisSteps = [
+    "Reading PDF structure...",
+    "Performing OCR on images...",
+    "Extracting key definitions...",
+    "Identifying hierarchy of concepts...",
+    "Summarizing complex theories...",
+    "Generating practice questions...",
+    "Creating logic-mapped flashcards...",
+    "Finalizing study guide..."
+  ];
+
   useEffect(() => {
-    if (isDragging && pulseRef.current) {
-      gsap.to(pulseRef.current, {
-        scale: 1.1,
-        opacity: 0.8,
-        duration: 0.8,
+    if (stage === "analyzing" && scannerLineRef.current) {
+      gsap.to(scannerLineRef.current, {
+        top: "100%",
+        duration: 1.5,
         repeat: -1,
         yoyo: true,
-        ease: "power1.inOut"
+        ease: "power2.inOut"
       });
-    } else if (pulseRef.current) {
-      gsap.to(pulseRef.current, {
-        scale: 1,
-        opacity: 0.5,
-        duration: 0.3
-      });
+
+      let step = 0;
+      const interval = setInterval(() => {
+        if (step < analysisSteps.length) {
+          setAnalysisStatus(analysisSteps[step]);
+          step++;
+        } else {
+          clearInterval(interval);
+          setStage("success");
+        }
+      }, 1200);
+
+      return () => {
+        clearInterval(interval);
+        gsap.killTweensOf(scannerLineRef.current);
+      };
     }
-  }, [isDragging]);
+  }, [stage]);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -68,158 +98,267 @@ export default function UploadPdfPage() {
     }
   };
 
-  const handleUpload = () => {
-    setIsUploading(true);
+  const startProcess = () => {
+    if (!file) return;
+    setStage("uploading");
     let progress = 0;
     const interval = setInterval(() => {
-      progress += 5;
-      setUploadProgress(progress);
+      progress += Math.random() * 15;
       if (progress >= 100) {
+        progress = 100;
+        setUploadProgress(100);
         clearInterval(interval);
-        setTimeout(() => {
-          setIsUploading(false);
-          // In a real app, we'd redirect to the generated notes
-        }, 1000);
+        setTimeout(() => setStage("analyzing"), 500);
+      } else {
+        setUploadProgress(Math.floor(progress));
       }
-    }, 100);
+    }, 200);
+  };
+
+  const reset = () => {
+    setFile(null);
+    setStage("idle");
+    setUploadProgress(0);
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-10">
-      <header className="text-center max-w-2xl mx-auto">
-        <h1 className="text-4xl font-bold mb-4 tracking-tight">Upload Study Material</h1>
-        <p className="text-secondary font-medium">Upload your textbooks, notes, or sample papers in PDF format. We'll extract everything you need to study effectively.</p>
+    <div className="max-w-6xl mx-auto space-y-12 pb-20">
+      <header className="text-center max-w-3xl mx-auto space-y-4">
+        <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-50 border border-orange-100 text-[#F9A11B] text-[10px] font-black uppercase tracking-[0.2em]"
+        >
+          <Sparkles className="w-3 h-3" /> AI-Powered Extraction
+        </motion.div>
+        <h1 className="text-4xl md:text-5xl font-black text-[#2D6A4F] tracking-tight leading-tight">
+            Turn your PDFs <br/> into <span className="text-[#F9A11B]">Instant Knowledge</span>
+        </h1>
+        <p className="text-lg text-gray-500 font-bold max-w-2xl mx-auto">
+            Upload your textbooks, class notes, or complex research papers. Our AI extract key points, flashcards, and practice tests in seconds.
+        </p>
       </header>
 
-      <div className="grid md:grid-cols-3 gap-8">
-        <div className="md:col-span-2">
+      <div className="grid lg:grid-cols-12 gap-10">
+        <div className="lg:col-span-8">
             <div 
-              ref={dropZoneRef}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               className={cn(
-                "relative h-[400px] border-4 border-dashed rounded-[3rem] flex flex-col items-center justify-center transition-all overflow-hidden",
-                isDragging ? "bg-primary/5 border-primary" : "bg-white border-muted hover:border-primary/30"
+                "relative min-h-[500px] border-4 border-dashed rounded-[48px] flex flex-col items-center justify-center transition-all bg-white shadow-2xl shadow-green-900/5",
+                isDragging ? "border-[#F9A11B] bg-orange-50/50 scale-[1.01]" : "border-gray-100 hover:border-[#2D6A4F]/30"
               )}
             >
-              {isDragging && (
-                <div 
-                  ref={pulseRef}
-                  className="absolute w-64 h-64 bg-primary/10 rounded-full -z-10"
-                />
-              )}
-
               <AnimatePresence mode="wait">
-                {!file ? (
+                {stage === "idle" && !file && (
                   <motion.div 
-                    key="empty"
-                    initial={{ opacity: 0, y: 10 }}
+                    key="idle"
+                    initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9 }}
-                    className="flex flex-col items-center text-center p-8"
+                    className="flex flex-col items-center text-center p-12"
                   >
-                    <div className="w-24 h-24 bg-primary/10 rounded-[2rem] flex items-center justify-center mb-8 text-primary shadow-xl shadow-primary/5">
-                      <UploadCloud className="w-10 h-10" />
+                    <div className="w-28 h-28 bg-[#2D6A4F]/10 rounded-[32px] flex items-center justify-center mb-10 text-[#2D6A4F] shadow-xl group cursor-pointer hover:scale-110 transition-transform">
+                      <UploadCloud className="w-12 h-12" />
                     </div>
-                    <h3 className="text-2xl font-bold mb-3">Drag & Drop PDF</h3>
-                    <p className="text-secondary mb-8 max-w-xs">Supported format: PDF. Max size: 50MB.</p>
-                    <label className="cursor-pointer">
-                      <Button variant="outline" className="rounded-2xl px-8 h-12 pointer-events-none">
-                        Browse Files
+                    <h3 className="text-3xl font-black text-gray-900 mb-4">Drop your study file here</h3>
+                    <p className="text-gray-500 font-bold mb-10 max-w-sm">Supported: PDF (up to 50MB). For best results use text-based PDFs.</p>
+                    
+                    <label className="cursor-pointer group">
+                      <Button className="bg-[#2D6A4F] hover:bg-[#1b4332] text-white rounded-2xl px-12 py-8 text-lg font-black shadow-xl shadow-green-900/20 transition-all pointer-events-none">
+                        Browse Computer
+                        <ArrowRight className="ml-3 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                       </Button>
                       <input type="file" accept=".pdf" className="hidden" onChange={handleFileChange} />
                     </label>
                   </motion.div>
-                ) : isUploading ? (
+                )}
+
+                {stage === "idle" && file && (
+                  <motion.div 
+                    key="selected"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    className="flex flex-col items-center p-12 w-full max-w-md"
+                  >
+                    <div className="relative mb-10">
+                        <div className="w-32 h-40 bg-orange-50 rounded-[32px] flex items-center justify-center text-[#F9A11B] border-4 border-orange-100 shadow-2xl">
+                           <FileText className="w-16 h-16" />
+                        </div>
+                        <button 
+                           onClick={() => setFile(null)}
+                           className="absolute -top-4 -right-4 w-10 h-10 bg-white border-2 border-gray-100 rounded-full flex items-center justify-center shadow-xl hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
+                    <h3 className="text-2xl font-black text-gray-900 mb-2 truncate w-full text-center">{file.name}</h3>
+                    <p className="text-gray-400 font-bold mb-10">{(file.size / (1024 * 1024)).toFixed(2)} MB • PDF Document</p>
+                    
+                    <Button 
+                      onClick={startProcess} 
+                      className="w-full bg-[#F9A11B] border-none hover:bg-orange-600 text-white rounded-2xl py-8 text-xl font-black shadow-2xl shadow-orange-500/20 flex items-center justify-center gap-3 transition-all"
+                    >
+                      <Zap className="w-6 h-6 fill-current" />
+                      Generate Magic Notes
+                    </Button>
+                  </motion.div>
+                )}
+
+                {stage === "uploading" && (
                   <motion.div 
                     key="uploading"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="flex flex-col items-center w-full max-w-xs p-8"
+                    className="flex flex-col items-center w-full max-w-sm p-12"
                   >
-                    <div className="relative w-32 h-32 mb-8">
+                    <div className="relative w-40 h-40 mb-10">
                         <svg className="w-full h-full transform -rotate-90">
                             <circle
-                                cx="64"
-                                cy="64"
-                                r="58"
+                                cx="80"
+                                cy="80"
+                                r="70"
                                 stroke="currentColor"
-                                strokeWidth="8"
+                                strokeWidth="12"
                                 fill="transparent"
-                                className="text-muted"
+                                className="text-gray-100"
                             />
                             <circle
-                                cx="64"
-                                cy="64"
-                                r="58"
+                                cx="80"
+                                cy="80"
+                                r="70"
                                 stroke="currentColor"
-                                strokeWidth="8"
+                                strokeWidth="12"
                                 fill="transparent"
-                                strokeDasharray={364.4}
-                                strokeDashoffset={364.4 - (364.4 * uploadProgress) / 100}
-                                className="text-primary transition-all duration-300"
+                                strokeDasharray={440}
+                                strokeDashoffset={440 - (440 * uploadProgress) / 100}
+                                className="text-[#2D6A4F] transition-all duration-300"
+                                strokeLinecap="round"
                             />
                         </svg>
-                        <div className="absolute inset-0 flex items-center justify-center text-xl font-black">
-                            {uploadProgress}%
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <span className="text-4xl font-black text-[#2D6A4F]">{uploadProgress}%</span>
                         </div>
                     </div>
-                    <p className="font-bold text-xl mb-2">Processing PDF...</p>
-                    <p className="text-sm text-secondary">Our AI is reading your content.</p>
+                    <h3 className="text-2xl font-black text-gray-900 mb-2">Sending to AI Cloud</h3>
+                    <p className="text-gray-400 font-bold">Securely encrypting your material...</p>
                   </motion.div>
-                ) : (
+                )}
+
+                {stage === "analyzing" && (
                   <motion.div 
-                    key="selected"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="flex flex-col items-center p-8"
+                    key="analyzing"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex flex-col items-center w-full max-w-lg p-12"
                   >
-                    <div className="relative">
-                        <div className="w-28 h-32 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 text-primary border-2 border-primary/20">
-                           <FileText className="w-12 h-12" />
+                    <div className="relative w-full max-w-[280px] aspect-3/4 bg-gray-50 rounded-[32px] border-4 border-gray-100 overflow-hidden mb-12 shadow-inner">
+                        <div className="p-6 space-y-4">
+                            <div className="h-4 bg-gray-200 rounded-full w-full opacity-50" />
+                            <div className="h-4 bg-gray-200 rounded-full w-3/4 opacity-50" />
+                            <div className="h-32 bg-gray-200 rounded-3xl w-full opacity-30" />
+                            <div className="h-4 bg-gray-200 rounded-full w-full opacity-50" />
+                            <div className="h-4 bg-gray-200 rounded-full w-1/2 opacity-50" />
+                            <div className="h-4 bg-gray-200 rounded-full w-2/3 opacity-50" />
                         </div>
+                        {/* Scanner Line */}
+                        <div 
+                          ref={scannerLineRef}
+                          className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-[#F9A11B] to-transparent z-10 shadow-[0_0_15px_rgba(249,161,27,0.8)]"
+                        />
+                        <div className="absolute top-0 left-0 w-full h-full bg-[#F9A11B]/10 mix-blend-overlay opacity-20" />
+                    </div>
+                    
+                    <div className="text-center space-y-4">
+                        <div className="flex items-center justify-center gap-3">
+                            <Loader2 className="w-6 h-6 text-[#F9A11B] animate-spin" />
+                            <h3 className="text-3xl font-black text-gray-900 tracking-tight italic">AI Brain Thinking...</h3>
+                        </div>
+                        <p className="text-lg font-black text-[#2D6A4F] tracking-widest h-6 flex items-center justify-center uppercase">
+                           {analysisStatus}
+                        </p>
+                    </div>
+                  </motion.div>
+                )}
+
+                {stage === "success" && (
+                  <motion.div 
+                    key="success"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex flex-col items-center p-12 text-center max-w-md"
+                  >
+                    <div className="w-32 h-32 bg-green-100 rounded-[40px] flex items-center justify-center mb-10 text-green-600 shadow-2xl shadow-green-600/20">
+                      <FileCheck className="w-16 h-16" />
+                    </div>
+                    <h3 className="text-4xl font-black text-gray-900 mb-4">Study Guide Ready!</h3>
+                    <p className="text-gray-500 font-bold mb-10 leading-relaxed">We've extracted 12 key points, 8 flashcards, and 5 practice questions from your document.</p>
+                    
+                    <div className="grid grid-cols-2 gap-4 w-full mb-10">
+                        <div className="p-5 bg-gray-50 rounded-3xl text-left border border-gray-100">
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Generated</p>
+                            <p className="text-lg font-black text-[#2D6A4F]">Smart Notes</p>
+                        </div>
+                        <div className="p-5 bg-gray-50 rounded-3xl text-left border border-gray-100">
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Generated</p>
+                            <p className="text-lg font-black text-[#F9A11B]">Flashcards</p>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col gap-4 w-full">
+                        <Link href="/dashboard/notes" className="w-full">
+                            <Button className="w-full bg-[#2D6A4F] border-none hover:bg-black text-white rounded-2xl py-8 text-xl font-black shadow-2xl shadow-green-900/20 flex items-center justify-center gap-3">
+                              View Results Now
+                              <Eye className="w-6 h-6" />
+                            </Button>
+                        </Link>
                         <button 
-                           onClick={() => setFile(null)}
-                           className="absolute -top-3 -right-3 w-8 h-8 bg-white border border-border rounded-full flex items-center justify-center shadow-lg hover:bg-muted transition-colors"
+                            onClick={reset}
+                            className="text-gray-400 font-black hover:text-[#F9A11B] transition-colors"
                         >
-                            <X className="w-4 h-4" />
+                            Upload Another File
                         </button>
                     </div>
-                    <h3 className="text-xl font-bold mb-1 truncate max-w-[250px]">{file.name}</h3>
-                    <p className="text-sm text-secondary mb-8">{(file.size / (1024 * 1024)).toFixed(2)} MB</p>
-                    <Button onClick={handleUpload} className="rounded-2xl px-12 h-14 text-lg font-bold gap-2 shadow-xl shadow-primary/20">
-                      Generate Notes from PDF <ArrowRight className="w-5 h-5" />
-                    </Button>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
         </div>
 
-        <div className="space-y-6">
-            <FeatureItem 
-                icon={<Zap className="w-5 h-5" />} 
-                title="Lightning Fast" 
-                desc="Generate comprehensive study guides in under 30 seconds."
-                color="bg-amber-100 text-amber-600"
+        <div className="lg:col-span-4 space-y-8">
+            <FeatureBox 
+                icon={<ShieldCheck className="w-6 h-6" />} 
+                title="Privacy Guaranteed" 
+                desc="Your PDFs are encrypted and auto-deleted from our cloud after 24 hours of inactivity."
+                color="bg-emerald-50 text-emerald-600 border-emerald-100"
             />
-            <FeatureItem 
-                icon={<Sparkles className="w-5 h-5" />} 
-                title="AI Optimized" 
-                desc="Our AI focuses on keywords and patterns likely to appear in board exams."
-                color="bg-primary/10 text-primary"
+            <FeatureBox 
+                icon={<Brain className="w-6 h-6" />} 
+                title="Deep Analysis" 
+                desc="We don't just summarize; we identify semantic relationships between topics for better logic mappings."
+                color="bg-purple-50 text-purple-600 border-purple-100"
             />
-            <FeatureItem 
-                icon={<ShieldCheck className="w-5 h-5" />} 
-                title="Safe & Secure" 
-                desc="Your documents are encrypted and only accessible by you."
-                color="bg-emerald-100 text-emerald-600"
+            <FeatureBox 
+                icon={<Search className="w-6 h-6" />} 
+                title="OCR Integration" 
+                desc="Even if your PDF is a scan of a textbook, our AI OCR engine can read and analyze the text."
+                color="bg-blue-50 text-blue-600 border-blue-100"
             />
             
-            <div className="p-8 rounded-[2.5rem] bg-gradient-to-br from-primary to-purple-600 text-white shadow-xl shadow-primary/20 mt-10">
-                <h4 className="font-bold mb-2">Pro Tip 💡</h4>
-                <p className="text-sm text-white/80 leading-relaxed">For the best results, upload PDFs that contain text rather than just images of handwritten notes.</p>
+            <div className="p-10 rounded-[48px] bg-linear-to-br from-[#2D6A4F] to-[#1b4332] text-white shadow-2xl shadow-green-900/10 relative overflow-hidden group">
+                <div className="relative z-10">
+                    <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-md">
+                        <Zap className="w-6 h-6 text-orange-400" />
+                    </div>
+                    <h4 className="text-xl font-black mb-3">Maximizing Results</h4>
+                    <p className="text-white/70 font-bold text-sm leading-relaxed mb-6">Text-based PDFs yield 40% better accuracy for flashcard generation compared to handwritten scans.</p>
+                    <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
+                        <div className="h-full bg-orange-400 w-3/4 rounded-full" />
+                    </div>
+                </div>
+                <Sparkles className="absolute -bottom-6 -right-6 w-32 h-32 text-white/5 group-hover:rotate-12 transition-transform duration-700" />
             </div>
         </div>
       </div>
@@ -227,24 +366,16 @@ export default function UploadPdfPage() {
   );
 }
 
-function FeatureItem({ icon, title, desc, color }: { icon: React.ReactNode, title: string, desc: string, color: string }) {
+function FeatureBox({ icon, title, desc, color }: { icon: React.ReactNode, title: string, desc: string, color: string }) {
     return (
-        <div className="p-6 rounded-3xl bg-white border border-border flex gap-4">
-            <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0", color)}>
+        <div className={cn("p-8 rounded-[40px] bg-white border-2 flex gap-6 group hover:translate-x-2 transition-all", color)}>
+            <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-lg transform group-hover:rotate-6 transition-transform shrink-0">
                 {icon}
             </div>
             <div>
-                <p className="font-bold text-sm block mb-1">{title}</p>
-                <p className="text-xs text-secondary leading-relaxed font-medium">{desc}</p>
+                <p className="font-black text-gray-800 mb-2">{title}</p>
+                <p className="text-sm font-bold text-gray-400 leading-relaxed">{desc}</p>
             </div>
         </div>
     );
 }
-
-function cn(...inputs: any[]) {
-    return inputs.filter(Boolean).join(" ");
-}
-
-const ArrowRight = ({ className }: { className?: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-);
