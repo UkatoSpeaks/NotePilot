@@ -13,7 +13,7 @@ export default function QuestionGeneratorPage() {
       </div>
 
       <div className="bg-white rounded-[2.5rem] border border-border p-12 flex flex-col items-center justify-center text-center">
-          <div className="w-24 h-24 bg-amber-100 rounded-[2rem] flex items-center justify-center mb-8 text-amber-600 shadow-xl shadow-amber-500/5">
+          <div className="w-24 h-24 bg-amber-100 rounded-4xl flex items-center justify-center mb-8 text-amber-600 shadow-xl shadow-amber-500/5">
             <MessageSquareQuote className="w-10 h-10" />
           </div>
           <h3 className="text-2xl font-bold mb-3">No Question Sets Yet</h3>

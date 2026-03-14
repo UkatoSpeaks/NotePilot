@@ -125,7 +125,7 @@ export default function FlashcardsPage() {
 
       {/* Empty State / Add More */}
       <div className="p-12 rounded-[3rem] bg-muted/50 border border-dashed border-border flex flex-col items-center justify-center text-center">
-          <div className="w-20 h-20 bg-white rounded-[2rem] shadow-xl flex items-center justify-center mb-6">
+          <div className="w-20 h-20 bg-white rounded-4xl shadow-xl flex items-center justify-center mb-6">
             <Plus className="w-10 h-10 text-primary" />
           </div>
           <h3 className="text-xl font-bold mb-2">Need more cards?</h3>

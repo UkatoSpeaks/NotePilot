@@ -33,6 +33,7 @@ export default function UploadPdfPage() {
   
   const scannerLineRef = useRef<HTMLDivElement>(null);
   const pulseRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const analysisSteps = [
     "Reading PDF structure...",
@@ -165,13 +166,22 @@ export default function UploadPdfPage() {
                     <h3 className="text-3xl font-black text-gray-900 mb-4">Drop your study file here</h3>
                     <p className="text-gray-500 font-bold mb-10 max-w-sm">Supported: PDF (up to 50MB). For best results use text-based PDFs.</p>
                     
-                    <label className="cursor-pointer group">
-                      <Button className="bg-[#2D6A4F] hover:bg-[#1b4332] text-white rounded-2xl px-12 py-8 text-lg font-black shadow-xl shadow-green-900/20 transition-all pointer-events-none">
+                    <div className="group">
+                      <Button 
+                        onClick={() => fileInputRef.current?.click()}
+                        className="bg-[#2D6A4F] hover:bg-[#1b4332] text-white rounded-2xl px-12 py-8 text-lg font-black shadow-xl shadow-green-900/20 transition-all"
+                      >
                         Browse Computer
                         <ArrowRight className="ml-3 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                       </Button>
-                      <input type="file" accept=".pdf" className="hidden" onChange={handleFileChange} />
-                    </label>
+                      <input 
+                        ref={fileInputRef}
+                        type="file" 
+                        accept=".pdf" 
+                        className="hidden" 
+                        onChange={handleFileChange} 
+                      />
+                    </div>
                   </motion.div>
                 )}
 

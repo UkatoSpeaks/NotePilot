@@ -184,7 +184,7 @@ export default function GenerateNotesPage() {
           </div>
 
           {/* Visual Side */}
-          <div className="hidden md:flex flex-col items-center justify-center bg-muted/50 rounded-[2rem] p-8 border border-dashed border-border relative overflow-hidden">
+          <div className="hidden md:flex flex-col items-center justify-center bg-muted/50 rounded-4xl p-8 border border-dashed border-border relative overflow-hidden">
              <div className="absolute top-0 right-0 p-4 opacity-50">
                  <Sparkles className="w-20 h-20 text-primary blur-3xl" />
              </div>
