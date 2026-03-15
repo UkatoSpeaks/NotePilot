@@ -21,6 +21,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 
 type UploadStage = "idle" | "uploading" | "analyzing" | "success";
 
@@ -62,10 +63,10 @@ export default function UploadPdfPage() {
           setAnalysisStatus(analysisSteps[step]);
           step++;
         } else {
-          clearInterval(interval);
-          setStage("success");
+          // Stay on the last step or restart cycle until API finish
+          step = 0; 
         }
-      }, 1200);
+      }, 2000);
 
       return () => {
         clearInterval(interval);
@@ -99,21 +100,47 @@ export default function UploadPdfPage() {
     }
   };
 
-  const startProcess = () => {
-    if (!file) return;
+  const { user } = useAuth();
+
+  const startProcess = async () => {
+    if (!file || !user) return;
+    
     setStage("uploading");
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += Math.random() * 15;
-      if (progress >= 100) {
-        progress = 100;
-        setUploadProgress(100);
-        clearInterval(interval);
-        setTimeout(() => setStage("analyzing"), 500);
-      } else {
-        setUploadProgress(Math.floor(progress));
+    setUploadProgress(10);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("userId", user.uid);
+      // Optional: you could add subject/class here if you have selectors for them
+      
+      setUploadProgress(50);
+      
+      // Move to analyzing stage
+      setStage("analyzing");
+      
+      const response = await fetch("/api/upload-pdf", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to process PDF");
       }
-    }, 200);
+
+      const result = await response.json();
+      
+      if (result.success) {
+        setStage("success");
+      } else {
+        const errorMsg = result.details ? `${result.error}: ${result.details}` : (result.error || "Unknown error occurred");
+        throw new Error(errorMsg);
+      }
+    } catch (error) {
+      console.error("Upload Error:", error);
+      alert(error instanceof Error ? error.message : "Something went wrong while processing your PDF. Please try again.");
+      setStage("idle");
+    }
   };
 
   const reset = () => {

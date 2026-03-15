@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-const pdf = require("pdf-parse");
+const pdf = require("pdf-parse-fork");
+
 import { model } from "@/lib/ai";
 import { saveNote } from "@/services/notesService";
 
@@ -21,12 +22,14 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(arrayBuffer);
 
     // 2. Extract Text from PDF
+    console.log(`Extracting PDF: ${file.name}`);
     const pdfData = await pdf(buffer);
     const extractedText = pdfData.text;
+    console.log(`Success: Extracted ${extractedText.length} chars.`);
 
-    // 3. Send Chunk of text to AI for summarization/notes
-    // (For large PDFs, we should ideally chunk this, but for now we'll send a slice)
-    const textSample = extractedText.slice(0, 10000); 
+    // 3. Send Chunk of text to AI
+    const textSample = extractedText.slice(0, 15000); 
+    console.log(`Sending ${textSample.length} characters to Groq AI...`);
 
     const prompt = `
       You are an expert tutor. I am providing you with text extracted from a school PDF.
@@ -46,6 +49,7 @@ export async function POST(req: NextRequest) {
 
     const result = await model.generateContent(prompt);
     const text = result.response.text();
+    console.log("AI generation complete.");
     const content = JSON.parse(text);
 
     // 4. Save as a Note
@@ -53,14 +57,18 @@ export async function POST(req: NextRequest) {
       subject,
       topic: file.name.replace(".pdf", ""),
       class: className,
-      board,
+      board: board,
       content
     });
 
+    console.log(`Note saved successfully with ID: ${noteId}`);
     return NextResponse.json({ success: true, noteId, content });
 
   } catch (error) {
     console.error("PDF Upload API Error:", error);
-    return NextResponse.json({ error: "Failed to process PDF" }, { status: 500 });
+    return NextResponse.json({ 
+      error: "Failed to process PDF", 
+      details: error instanceof Error ? error.message : "Unknown error" 
+    }, { status: 500 });
   }
 }
