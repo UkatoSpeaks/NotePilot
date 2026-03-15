@@ -8,12 +8,12 @@ import {
 } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDT8VX8n507o-Q41H9i47gGh74JKY2oEgI",
-  authDomain: "notepilot-ai-801.firebaseapp.com",
-  projectId: "notepilot-ai-801",
-  storageBucket: "notepilot-ai-801.firebasestorage.app",
-  messagingSenderId: "315011397102",
-  appId: "1:315011397102:web:492e4f3bc50035b7f20aff"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
 // Initialize Firebase
