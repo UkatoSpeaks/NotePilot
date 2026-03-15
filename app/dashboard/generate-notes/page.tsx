@@ -16,7 +16,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { NoteViewer } from "@/components/ui/note-viewer";
 import { useAuth } from "@/context/AuthContext";
-import { saveNote } from "@/lib/firestore";
+import { saveNote, getNote } from "@/lib/firestore";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { cn } from "@/lib/utils";
 
 const MOCK_NOTES = {
   definition: "Mitosis is a fundamental process for life on Earth, where a single cell divides into two genetically identical daughter cells, maintaining the chromosome number of the original cell.",
@@ -51,6 +54,36 @@ export default function GenerateNotesPage() {
   });
 
   const [generatedNote, setGeneratedNote] = useState<any>(null);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const noteId = searchParams.get("noteId");
+
+  useEffect(() => {
+    async function checkUrl() {
+      if (noteId && !generatedNote) {
+        setIsGenerating(true);
+        try {
+          const note = await getNote(noteId);
+          if (note) {
+            setGeneratedNote(note.content);
+            setFormData({
+               class: note.class || "",
+               subject: note.subject || "",
+               topic: note.topic || "",
+               board: note.board || "",
+               questionType: "Short Answer"
+            });
+            setShowResult(true);
+          }
+        } catch (e) {
+          console.error(e);
+        } finally {
+          setIsGenerating(false);
+        }
+      }
+    }
+    checkUrl();
+  }, [noteId]);
 
   const handleGenerate = async () => {
     if (!user) return;
@@ -78,6 +111,7 @@ export default function GenerateNotesPage() {
       if (result.success) {
         setGeneratedNote(result.content);
         setShowResult(true);
+        router.push(`?noteId=${result.noteId}`, { scroll: false });
       } else {
         throw new Error(result.error);
       }
@@ -93,6 +127,7 @@ export default function GenerateNotesPage() {
     setShowResult(false);
     setFormData({ class: "", subject: "", topic: "", board: "", questionType: "Short Answer" });
     setStep(1);
+    router.push("/dashboard/generate-notes");
   };
 
   if (showResult) {
@@ -281,6 +316,3 @@ export default function GenerateNotesPage() {
   );
 }
 
-function cn(...inputs: any[]) {
-    return inputs.filter(Boolean).join(" ");
-}

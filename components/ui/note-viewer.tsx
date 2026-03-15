@@ -1,9 +1,11 @@
 "use client";
 
 import React from "react";
-import { Copy, Download, Share2, Sparkles, Bookmark } from "lucide-react";
+import { Copy, Download, Share2, Sparkles, Bookmark, Check, Share } from "lucide-react";
 import { Button } from "./button";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 import { NoteStructure } from "@/lib/firestore";
 
@@ -14,13 +16,71 @@ interface NoteViewerProps {
 }
 
 export function NoteViewer({ title, subject, content }: NoteViewerProps) {
+  const [isCopied, setIsCopied] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+
+  const handleCopy = async () => {
+    const text = `
+${title} (${subject})
+--------------------------
+DEFINITION:
+${content.definition}
+
+KEY CONCEPTS:
+${content.keyConcepts.map(c => `- ${c}`).join('\n')}
+
+EXAMPLES:
+${content.examples.map(e => `- ${e}`).join('\n')}
+
+EXAM QUESTIONS:
+${content.examQuestions.map((q: any, i: number) => {
+  const qText = typeof q === 'string' ? q : q.question;
+  const aText = typeof q === 'string' ? '' : `\nAnswer: ${q.answer}`;
+  return `Q${i+1}: ${qText}${aText}`;
+}).join('\n\n')}
+    `.trim();
+
+    await navigator.clipboard.writeText(text);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
+  };
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `NotePilot: ${title}`,
+          text: `Check out these smart notes on ${title}!`,
+          url: window.location.href,
+        });
+      } catch (err) {
+        console.log("Share failed", err);
+      }
+    } else {
+      await navigator.clipboard.writeText(window.location.href);
+      alert("Link copied to clipboard!");
+    }
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-[2.5rem] border border-border overflow-hidden shadow-2xl shadow-primary/5"
+      className="bg-white rounded-[2.5rem] border border-border overflow-hidden shadow-2xl shadow-primary/5 print:shadow-none print:border-none print:rounded-none"
     >
-      <div className="p-8 md:p-12 border-b border-dashed border-border flex flex-col md:flex-row md:items-center justify-between gap-6 bg-linear-to-br from-white to-muted/30">
+      <style jsx global>{`
+        @media print {
+          .no-print { display: none !important; }
+          body { background: white !important; padding: 0 !important; }
+          .print-container { padding: 0 !important; margin: 0 !important; }
+        }
+      `}</style>
+      
+      <div className="p-8 md:p-12 border-b border-dashed border-border flex flex-col md:flex-row md:items-center justify-between gap-6 bg-linear-to-br from-white to-muted/30 no-print">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <span className="px-3 py-1 bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest rounded-full">{subject}</span>
@@ -32,19 +92,43 @@ export function NoteViewer({ title, subject, content }: NoteViewerProps) {
         </div>
         
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="icon" className="rounded-2xl">
-            <Copy className="w-4 h-4" />
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={handleCopy}
+            className={cn("rounded-2xl transition-all", isCopied && "bg-green-50 border-green-200 text-green-600")}
+          >
+            {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
           </Button>
-          <Button variant="outline" size="icon" className="rounded-2xl">
-            <Bookmark className="w-4 h-4" />
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={() => setIsBookmarked(!isBookmarked)}
+            className={cn("rounded-2xl transition-all", isBookmarked && "bg-amber-50 border-amber-200 text-amber-600")}
+          >
+            <Bookmark className={cn("w-4 h-4", isBookmarked && "fill-current")} />
           </Button>
-          <Button variant="outline" size="icon" className="rounded-2xl">
+          <Button variant="outline" size="icon" onClick={handleShare} className="rounded-2xl">
             <Share2 className="w-4 h-4" />
           </Button>
-          <Button className="rounded-2xl gap-3 font-bold px-6">
+          <Button onClick={handlePrint} className="rounded-2xl gap-3 font-bold px-6">
             <Download className="w-4 h-4" /> Export PDF
           </Button>
         </div>
+      </div>
+
+      {/* Print Header */}
+      <div className="hidden print:block p-12 border-b-2 border-gray-900 mb-10">
+          <div className="flex justify-between items-end">
+              <div>
+                  <p className="text-secondary font-black uppercase tracking-widest text-xs mb-2">Study Guide / {subject}</p>
+                  <h1 className="text-5xl font-black text-gray-900">{title}</h1>
+              </div>
+              <div className="text-right">
+                  <p className="text-4xl font-black text-primary">NotePilot</p>
+                  <p className="text-xs font-bold text-secondary">Generated by AI Smart Notes</p>
+              </div>
+          </div>
       </div>
 
       <div className="p-8 md:p-12 space-y-12 max-w-4xl mx-auto">
@@ -162,7 +246,7 @@ export function NoteViewer({ title, subject, content }: NoteViewerProps) {
         </motion.section>
       </div>
 
-      <div className="p-8 bg-muted/50 border-t border-border mt-12">
+      <div className="p-8 bg-muted/50 border-t border-border mt-12 no-print">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 rounded-3xl bg-white p-6 border border-primary/10">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
