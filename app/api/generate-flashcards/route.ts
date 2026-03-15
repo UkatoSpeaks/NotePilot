@@ -3,7 +3,7 @@ import { model } from "@/lib/ai";
 import { saveFlashcards } from "@/services/flashcardService";
 import { getUserUsage } from "@/lib/firestore";
 
-const FLASHCARD_LIMIT = 3;
+const FLASHCARD_LIMIT = 20;
 
 export async function POST(req: NextRequest) {
   try {

@@ -64,7 +64,7 @@ export async function getUserUsage(userId: string) {
         try {
           await updateDoc(usageRef, {
             notesToday: 0,
-            flashcardsToday: 0,
+           flashcardsToday: 0,
             questionsToday: 0,
             lastReset: today
           });
@@ -88,7 +88,7 @@ export interface NoteStructure {
   keyConcepts: string[];
   formulas?: string[];
   examples: string[];
-  examQuestions: string[];
+  examQuestions: { question: string, answer: string }[] | string[];
 }
 
 export async function saveNote(userId: string, subject: string, topic: string, content: NoteStructure | string) {

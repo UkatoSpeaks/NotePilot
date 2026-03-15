@@ -3,11 +3,11 @@ import { model } from "@/lib/ai";
 import { saveNote } from "@/services/notesService";
 import { getUserUsage } from "@/lib/firestore";
 
-const FREE_LIMIT = 5;
+const FREE_LIMIT = 20;
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId, subject, topic, class: className, board } = await req.json();
+    const { userId, subject, topic, class: className, board, questionType } = await req.json();
 
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -22,6 +22,12 @@ export async function POST(req: NextRequest) {
       You are an expert tutor. Generate detailed, structured study notes for a Class ${className} ${board} student.
       Subject: ${subject}
       Topic: ${topic}
+      
+      Requirements for Practice Questions:
+      Please generate 5 questions specifically of type: ${questionType}.
+      For each question, also provide an "answer" that follows the ${questionType} format.
+      - MCQs: Include options in the question text and the correct answer in the answer field.
+      - Short/Long: Provide a concise or detailed model answer as appropriate.
 
       Return the response in this EXACT JSON format:
       {
@@ -29,7 +35,10 @@ export async function POST(req: NextRequest) {
         "keyConcepts": ["Concept 1", "Concept 2", ...],
         "formulas": ["Optional Formula 1", ...],
         "examples": ["Real-world example 1", ...],
-        "examQuestions": ["Sample exam question 1", ...]
+        "examQuestions": [
+          { "question": "The question text", "answer": "The model answer" },
+          ...
+        ]
       }
     `;
 

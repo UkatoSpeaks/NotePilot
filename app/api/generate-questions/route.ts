@@ -3,7 +3,7 @@ import { model } from "@/lib/ai";
 import { saveQuestions } from "@/services/questionService";
 import { getUserUsage } from "@/lib/firestore";
 
-const QUESTION_LIMIT = 3;
+const QUESTION_LIMIT = 20;
 
 export async function POST(req: NextRequest) {
   try {

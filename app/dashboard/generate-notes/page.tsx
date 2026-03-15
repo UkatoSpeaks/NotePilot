@@ -9,7 +9,8 @@ import {
   Target,
   FileText,
   RefreshCw,
-  Loader2
+  Loader2,
+  HelpCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -45,7 +46,8 @@ export default function GenerateNotesPage() {
     class: "",
     subject: "",
     topic: "",
-    board: ""
+    board: "",
+    questionType: "Short Answer"
   });
 
   const [generatedNote, setGeneratedNote] = useState<any>(null);
@@ -63,7 +65,8 @@ export default function GenerateNotesPage() {
           subject: formData.subject,
           topic: formData.topic,
           class: formData.class,
-          board: formData.board
+          board: formData.board,
+          questionType: formData.questionType
         })
       });
 
@@ -88,7 +91,7 @@ export default function GenerateNotesPage() {
 
   const reset = () => {
     setShowResult(false);
-    setFormData({ class: "", subject: "", topic: "", board: "" });
+    setFormData({ class: "", subject: "", topic: "", board: "", questionType: "Short Answer" });
     setStep(1);
   };
 
@@ -184,6 +187,28 @@ export default function GenerateNotesPage() {
                 onChange={(e) => setFormData({...formData, topic: e.target.value})}
                 className="w-full bg-muted border-none rounded-2xl p-4 font-bold outline-none ring-primary/20 focus:ring-4 transition-all"
               />
+            </div>
+
+            <div className="space-y-4">
+               <label className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-secondary">
+                <HelpCircle className="w-4 h-4" /> Question Type
+              </label>
+              <div className="flex gap-2">
+                {["MCQ", "Short Answer", "Long Answer"].map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => setFormData({...formData, questionType: type})}
+                    className={cn(
+                      "flex-1 py-3 rounded-2xl border-2 font-bold text-xs transition-all",
+                      formData.questionType === type 
+                        ? "bg-primary border-primary text-white shadow-lg shadow-primary/20" 
+                        : "border-muted hover:border-primary/30 text-secondary"
+                    )}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <Button 

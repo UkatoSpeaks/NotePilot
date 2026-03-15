@@ -138,13 +138,26 @@ export function NoteViewer({ title, subject, content }: NoteViewerProps) {
             <div className="w-2 h-8 bg-red-500 rounded-full" />
             Exam Practice Questions
           </h3>
-          <div className="space-y-3">
-            {content.examQuestions.map((item, i) => (
-              <div key={i} className="p-4 rounded-xl bg-red-50 font-bold text-red-700 flex items-center gap-3">
-                 <span className="w-6 h-6 rounded-lg bg-red-100 flex items-center justify-center text-[10px] shrink-0">Q{i+1}</span>
-                 {item}
-              </div>
-            ))}
+          <div className="space-y-4">
+            {content.examQuestions.map((item, i) => {
+              const q = typeof item === 'string' ? item : item.question;
+              const a = typeof item === 'string' ? null : item.answer;
+              
+              return (
+                <div key={i} className="flex flex-col gap-2">
+                  <div className="p-4 rounded-xl bg-red-50 font-bold text-red-700 flex items-center gap-3">
+                    <span className="w-6 h-6 rounded-lg bg-red-100 flex items-center justify-center text-[10px] shrink-0 font-black">Q{i+1}</span>
+                    {q}
+                  </div>
+                  {a && (
+                    <div className="ml-9 p-4 rounded-xl bg-orange-50/50 border border-orange-100 font-bold text-orange-800 text-sm italic">
+                      <span className="text-[10px] uppercase tracking-widest text-orange-500 block mb-1">Model Answer</span>
+                      {a}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </motion.section>
       </div>
