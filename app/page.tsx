@@ -5,40 +5,39 @@ import Image from "next/image";
 import Link from "next/link";
 import { 
   ArrowUpRight, 
-  Search, 
   Star, 
   Linkedin, 
   Twitter, 
   Youtube, 
   ChevronRight, 
-  Menu,
   Clock,
   BookOpen,
   FileText,
   Brain,
-  UploadCloud,
   CheckCircle2,
   XCircle,
   Zap,
   Layout,
-  MessageSquare,
-  Award
+  MessageSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { motion, useInView, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
-import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useAuth } from "@/context/AuthContext";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
 export default function LandingPage() {
+  const { user, loading } = useAuth();
   const heroVisualRef = useRef(null);
   const headlineRef = useRef(null);
-  const scrollRef = useRef(null);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    
     // Hero Entrance Animations
     const tl = gsap.timeline();
     tl.from(headlineRef.current, {
@@ -80,28 +79,13 @@ export default function LandingPage() {
       stagger: 1
     });
 
-    // Section Reveals
-    gsap.utils.toArray(".reveal-section").forEach((section: any) => {
-      gsap.from(section, {
-        scrollTrigger: {
-          trigger: section,
-          start: "top 80%",
-          toggleActions: "play none none none"
-        },
-        y: 60,
-        opacity: 0,
-        duration: 1,
-        ease: "power3.out"
-      });
-    });
-
     return () => {
-      ScrollTrigger.getAll().forEach(t => t.kill());
+      tl.kill();
     };
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#FDFCF8] text-[#1A1A1A] font-['Plus_Jakarta_Sans',sans-serif]">
+    <div className="min-h-screen bg-[#FDFCF8] text-[#1A1A1A] font-sans">
       {/* 1. Enhanced Navigation */}
       <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-7xl">
         <div className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-[32px] px-8 h-20 flex items-center justify-between shadow-[0_8px_32px_0_rgba(45,106,79,0.08)]">
@@ -120,7 +104,7 @@ export default function LandingPage() {
               <Link 
                 key={item}
                 href={`#${item.toLowerCase().replace(/\s+/g, '-')}`} 
-                className="text-sm font-bold text-[#666666] hover:text-[#2D6A4F] relative group/link transition-colors"
+                className="text-sm font-bold text-gray-600 hover:text-[#2D6A4F] relative group/link transition-colors"
               >
                 {item}
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#F9A11B] transition-all duration-300 group-hover/link:w-full" />
@@ -129,20 +113,32 @@ export default function LandingPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Link href="/login">
-              <Button variant="ghost" className="text-sm font-bold text-[#666666] hover:text-[#2D6A4F] hover:bg-white/50 rounded-full px-6">
-                Login
-              </Button>
-            </Link>
-            <Button className="bg-[#2D6A4F] hover:bg-[#1b4332] text-white rounded-full px-8 font-black h-12 shadow-lg shadow-green-900/20 transition-all hover:scale-105 active:scale-95">
-              Try for Free
-            </Button>
+            {!loading && user ? (
+              <Link href="/dashboard">
+                <Button className="bg-[#2D6A4F] hover:bg-[#1b4332] text-white rounded-full px-8 font-black h-12 shadow-lg shadow-green-900/20 transition-all hover:scale-105 active:scale-95">
+                  Dashboard
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/login">
+                  <Button variant="ghost" className="text-sm font-bold text-gray-600 hover:text-[#2D6A4F] hover:bg-white/50 rounded-full px-6">
+                    Login
+                  </Button>
+                </Link>
+                <Link href="/login">
+                  <Button className="bg-[#2D6A4F] hover:bg-[#1b4332] text-white rounded-full px-8 font-black h-12 shadow-lg shadow-green-900/20 transition-all hover:scale-105 active:scale-95">
+                    Try for Free
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </nav>
 
       {/* 1. Hero Section */}
-      <section className="pt-32 pb-20 px-6 max-w-7xl mx-auto">
+      <motion.section className="pt-32 pb-20 px-6 max-w-7xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div>
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-100 text-[#F9A11B] rounded-full text-sm font-black mb-6">
@@ -152,17 +148,39 @@ export default function LandingPage() {
             <h1 ref={headlineRef} className="text-5xl md:text-7xl font-black leading-[1.1] mb-8">
               Generate <span className="custom-underline">Smart Study Notes</span> in Seconds with AI
             </h1>
-            <p className="text-xl text-[#666666] font-medium leading-relaxed mb-10 max-w-lg">
+            <p className="text-xl text-gray-600 font-medium leading-relaxed mb-10 max-w-lg">
               Turn any topic into structured notes, flashcards, and exam questions instantly. Study smarter, not harder.
             </p>
             <div className="flex flex-wrap gap-4 hero-cta">
-              <Button className="bg-[#F9A11B] hover:bg-[#e69110] text-white rounded-full px-8 py-7 text-lg font-black shadow-xl shadow-orange-500/20">
-                Generate Notes
-                <ArrowUpRight className="ml-2 w-6 h-6" />
-              </Button>
-              <Button variant="outline" className="border-2 border-[#2D6A4F] text-[#2D6A4F] hover:bg-[#2D6A4F] hover:text-white rounded-full px-8 py-7 text-lg font-black transition-all">
-                Learn More
-              </Button>
+              {!loading && user ? (
+                <>
+                  <Link href="/dashboard">
+                    <Button className="bg-[#F9A11B] hover:bg-[#e69110] text-white rounded-full px-8 py-7 text-lg font-black shadow-xl shadow-orange-500/20 cursor-pointer">
+                      Go to Dashboard
+                      <ArrowUpRight className="ml-2 w-6 h-6" />
+                    </Button>
+                  </Link>
+                  <Link href="/dashboard/generate-notes">
+                    <Button variant="outline" className="border-2 border-[#2D6A4F] text-[#2D6A4F] hover:bg-[#2D6A4F] hover:text-white rounded-full px-8 py-7 text-lg font-black transition-all cursor-pointer">
+                      Quick Study
+                    </Button>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link href="/dashboard/generate-notes">
+                    <Button className="bg-[#F9A11B] hover:bg-[#e69110] text-white rounded-full px-8 py-7 text-lg font-black shadow-xl shadow-orange-500/20 cursor-pointer">
+                      Generate Notes
+                      <ArrowUpRight className="ml-2 w-6 h-6" />
+                    </Button>
+                  </Link>
+                  <Link href="#features">
+                    <Button variant="outline" className="border-2 border-[#2D6A4F] text-[#2D6A4F] hover:bg-[#2D6A4F] hover:text-white rounded-full px-8 py-7 text-lg font-black transition-all cursor-pointer">
+                      Learn More
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
             
             <div className="mt-12 flex items-center gap-4 hero-cta opacity-80">
@@ -264,13 +282,19 @@ export default function LandingPage() {
             <div className="absolute -bottom-1/4 -left-1/4 w-64 h-64 bg-orange-400/10 rounded-full blur-3xl floating-blob" />
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* 2. Problem Section */}
-      <section className="py-24 bg-white px-6 reveal-section">
+      <motion.section 
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.8 }}
+        className="py-24 bg-white px-6"
+      >
         <div className="max-w-7xl mx-auto text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-black mb-6 text-[#2D6A4F]">Studying Shouldn't Be This Hard</h2>
-          <p className="text-xl text-[#666666] font-medium max-w-2xl mx-auto italic">
+          <p className="text-xl text-gray-600 font-medium max-w-2xl mx-auto italic">
             "I spent 4 hours today just making notes and didn't even start studying." - Every Student Ever.
           </p>
         </div>
@@ -291,10 +315,17 @@ export default function LandingPage() {
             />
           ))}
         </div>
-      </section>
+      </motion.section>
 
       {/* 3. Solution Section */}
-      <section id="features" className="py-24 px-6 bg-[#FDFCF8] overflow-hidden reveal-section">
+      <motion.section 
+        id="features" 
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 1 }}
+        className="py-24 px-6 bg-[#FDFCF8] overflow-hidden"
+      >
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col lg:flex-row gap-16 items-center">
              <motion.div 
@@ -328,10 +359,17 @@ export default function LandingPage() {
              </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* 4. How It Works Section */}
-      <section id="how-it-works" className="py-24 bg-[#2D6A4F] text-white px-6 reveal-section">
+      <motion.section 
+        id="how-it-works" 
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.8 }}
+        className="py-24 bg-[#2D6A4F] text-white px-6"
+      >
         <div className="max-w-7xl mx-auto text-center mb-20">
           <h2 className="text-4xl md:text-5xl font-black mb-6">How It Works</h2>
           <p className="text-white/60 text-lg font-bold">From confused to exam-ready in 3 easy steps.</p>
@@ -344,13 +382,19 @@ export default function LandingPage() {
           <StepCard number="2" title="AI MAGIC" desc="Our engine generates structured headings and key points." index={1} />
           <StepCard number="3" title="Study & Ace" desc="Review flashcards and test yourself with AI questions." index={2} />
         </div>
-      </section>
+      </motion.section>
 
       {/* 6. Example Output Section */}
-      <section className="py-24 px-6 max-w-7xl mx-auto reveal-section">
+      <motion.section 
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.8 }}
+        className="py-24 px-6 max-w-7xl mx-auto"
+      >
         <div className="text-center mb-16">
           <h2 className="text-4xl font-black mb-4">See the <span className="text-[#F9A11B]">Result</span> Yourself</h2>
-          <p className="text-[#666666] font-bold">Actual output for the topic: "Photosynthesis"</p>
+          <p className="text-gray-600 font-bold">Actual output for the topic: "Photosynthesis"</p>
         </div>
         <div className="bg-white border-2 border-gray-100 rounded-[40px] p-8 md:p-12 shadow-xl max-w-4xl mx-auto">
            <div className="space-y-8">
@@ -359,7 +403,7 @@ export default function LandingPage() {
                   <div className="w-2 h-8 bg-[#F9A11B] rounded-full" />
                   Definition
                 </h3>
-                <p className="text-[#666666] leading-relaxed font-medium">
+                <p className="text-gray-600 leading-relaxed font-medium">
                   Photosynthesis is the process by which green plants and some other organisms use sunlight to synthesize foods from carbon dioxide and water.
                 </p>
               </div>
@@ -372,11 +416,11 @@ export default function LandingPage() {
                 <ul className="grid md:grid-cols-2 gap-4">
                   <li className="flex items-start gap-2 bg-[#FDFCF8] p-4 rounded-2xl border border-gray-50">
                     <span className="text-[#F9A11B] font-black">•</span>
-                    <p className="text-sm font-bold text-[#666666]">Occurs mainly in the chloroplasts of leaves.</p>
+                    <p className="text-sm font-bold text-gray-600">Occurs mainly in the chloroplasts of leaves.</p>
                   </li>
                   <li className="flex items-start gap-2 bg-[#FDFCF8] p-4 rounded-2xl border border-gray-50">
                     <span className="text-[#F9A11B] font-black">•</span>
-                    <p className="text-sm font-bold text-[#666666]">Requires light energy, CO2, and H2O.</p>
+                    <p className="text-sm font-bold text-gray-600">Requires light energy, CO2, and H2O.</p>
                   </li>
                 </ul>
               </div>
@@ -398,7 +442,7 @@ export default function LandingPage() {
                       "Write the balanced chemical equation for the process."
                    ].map((q, i) => (
                       <div key={i} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 group cursor-default">
-                         <p className="font-bold text-[#666666]">{i+1}. {q}</p>
+                         <p className="font-bold text-gray-600">{i+1}. {q}</p>
                          <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-[#F9A11B] group-hover:translate-x-1 transition-all" />
                       </div>
                    ))}
@@ -406,21 +450,28 @@ export default function LandingPage() {
               </div>
            </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* 9. Pricing Section */}
-      <section id="pricing" className="py-24 bg-[#FDFCF8] px-6 reveal-section">
+      <motion.section 
+        id="pricing" 
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.8 }}
+        className="py-24 bg-[#FDFCF8] px-6"
+      >
         <div className="max-w-7xl mx-auto text-center mb-16">
            <h2 className="text-5xl font-black mb-4 text-[#2D6A4F]">Simple Pricing</h2>
-           <p className="text-[#666666] font-bold text-lg">Created with a student's budget in mind.</p>
+           <p className="text-gray-600 font-bold text-lg">Created with a student's budget in mind.</p>
         </div>
         
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
            {/* Free Plan */}
            <div className="bg-white p-10 rounded-[40px] border-2 border-gray-100 hover:border-[#2D6A4F]/20 transition-all flex flex-col items-center text-center">
               <h3 className="text-2xl font-black mb-2">Free Plan</h3>
-              <p className="text-[#666666] font-bold mb-6">Explore the basics</p>
-              <div className="text-4xl font-black mb-8">₹0 <span className="text-lg text-[#666666]">/ forever</span></div>
+              <p className="text-gray-600 font-bold mb-6">Explore the basics</p>
+              <div className="text-4xl font-black mb-8">₹0 <span className="text-lg text-gray-600">/ forever</span></div>
               <div className="space-y-4 mb-10 w-full text-left">
                  <PricingItem text="5 AI Notes per day" />
                  <PricingItem text="3 Flashcard sets" />
@@ -447,10 +498,16 @@ export default function LandingPage() {
               <Button className="w-full py-7 rounded-full bg-[#F9A11B] hover:bg-[#e69110] text-white font-black shadow-lg shadow-orange-500/20">Go Pro Now</Button>
            </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* 10. Final CTA Section */}
-      <section className="py-24 px-6 text-center reveal-section">
+      <motion.section 
+        initial={{ opacity: 0, scale: 0.95 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.8 }}
+        className="py-24 px-6 text-center"
+      >
         <div className="max-w-4xl mx-auto bg-[#F9A11B] p-12 md:p-20 rounded-[60px] relative overflow-hidden">
            <div className="relative z-10">
               <h2 className="text-4xl md:text-6xl font-black text-white mb-8">Start Studying <br/> Smarter Today</h2>
@@ -463,7 +520,7 @@ export default function LandingPage() {
            <SparkleIcon className="absolute -top-10 -left-10 w-40 h-40 text-white/20" />
            <SparkleIcon className="absolute -bottom-10 -right-10 w-40 h-40 text-white/20" />
         </div>
-      </section>
+      </motion.section>
 
       {/* 11. Footer */}
       <footer className="bg-white py-20 px-6 border-t border-gray-100">
@@ -476,7 +533,7 @@ export default function LandingPage() {
                 </div>
                 <span className="text-2xl font-black tracking-tight text-[#2D6A4F]">NotePilot</span>
               </Link>
-              <p className="text-[#666666] font-bold max-w-sm leading-relaxed mb-8">
+              <p className="text-gray-600 font-bold max-w-sm leading-relaxed mb-8">
                 The world's fastest AI study tool for students. Turn confusion into clarity in seconds.
               </p>
               <div className="flex gap-4">
@@ -489,27 +546,27 @@ export default function LandingPage() {
             <div>
               <h4 className="font-black text-lg mb-6 uppercase tracking-widest text-[#2D6A4F]">Product</h4>
               <ul className="space-y-4">
-                <li><Link href="#" className="font-bold text-[#666666] hover:text-[#F9A11B]">Features</Link></li>
-                <li><Link href="#" className="font-bold text-[#666666] hover:text-[#F9A11B]">Pricing</Link></li>
-                <li><Link href="#" className="font-bold text-[#666666] hover:text-[#F9A11B]">Demo</Link></li>
+                <li><Link href="#" className="font-bold text-gray-600 hover:text-[#F9A11B]">Features</Link></li>
+                <li><Link href="#" className="font-bold text-gray-600 hover:text-[#F9A11B]">Pricing</Link></li>
+                <li><Link href="#" className="font-bold text-gray-600 hover:text-[#F9A11B]">Demo</Link></li>
               </ul>
             </div>
 
             <div>
               <h4 className="font-black text-lg mb-6 uppercase tracking-widest text-[#2D6A4F]">Company</h4>
               <ul className="space-y-4">
-                <li><Link href="#" className="font-bold text-[#666666] hover:text-[#F9A11B]">About Us</Link></li>
-                <li><Link href="#" className="font-bold text-[#666666] hover:text-[#F9A11B]">Contact</Link></li>
-                <li><Link href="#" className="font-bold text-[#666666] hover:text-[#F9A11B]">Support</Link></li>
+                <li><Link href="#" className="font-bold text-gray-600 hover:text-[#F9A11B]">About Us</Link></li>
+                <li><Link href="#" className="font-bold text-gray-600 hover:text-[#F9A11B]">Contact</Link></li>
+                <li><Link href="#" className="font-bold text-gray-600 hover:text-[#F9A11B]">Support</Link></li>
               </ul>
             </div>
           </div>
           
           <div className="pt-8 border-t border-gray-100 flex flex-col md:row justify-between items-center gap-4">
-            <p className="text-sm font-bold text-[#666666]">© 2026 NotePilot. All rights reserved.</p>
+            <p className="text-sm font-bold text-gray-600">© 2026 NotePilot. All rights reserved.</p>
             <div className="flex gap-8">
-              <Link href="#" className="text-sm font-bold text-[#666666] hover:text-[#F9A11B]">Terms</Link>
-              <Link href="#" className="text-sm font-bold text-[#666666] hover:text-[#F9A11B]">Privacy</Link>
+              <Link href="#" className="text-sm font-bold text-gray-600 hover:text-[#F9A11B]">Terms</Link>
+              <Link href="#" className="text-sm font-bold text-gray-600 hover:text-[#F9A11B]">Privacy</Link>
             </div>
           </div>
         </div>
@@ -532,7 +589,7 @@ function ProblemCard({ icon, title, desc, index }: { icon: React.ReactNode, titl
         {icon}
       </div>
       <h3 className="text-xl font-black mb-4 group-hover:text-[#F9A11B] transition-colors">{title}</h3>
-      <p className="text-[#666666] font-bold text-sm leading-relaxed">{desc}</p>
+      <p className="text-gray-600 font-bold text-sm leading-relaxed">{desc}</p>
     </motion.div>
   );
 }
@@ -552,7 +609,7 @@ function ServiceCard({ icon, title, desc, color, index }: { icon: React.ReactNod
       </div>
       <div>
         <h3 className="text-2xl font-black mb-1 group-hover:text-[#F9A11B] transition-colors">{title}</h3>
-        <p className="font-bold text-[#666666] text-sm">{desc}</p>
+        <p className="font-bold text-gray-600 text-sm">{desc}</p>
       </div>
     </motion.div>
   );
@@ -568,7 +625,7 @@ function FeatureRow({ icon, text, index }: { icon: React.ReactNode, text: string
       className="flex items-center gap-4 group cursor-default"
     >
       <div className="scale-125 group-hover:scale-150 transition-transform duration-300">{icon}</div>
-      <p className="text-xl font-black text-[#666666] group-hover:text-[#2D6A4F] transition-colors">{text}</p>
+      <p className="text-xl font-black text-gray-600 group-hover:text-[#2D6A4F] transition-colors">{text}</p>
     </motion.div>
   );
 }
@@ -599,7 +656,7 @@ function PricingItem({ text, active = false, disabled = false }: { text: string,
       ) : (
         <CheckCircle2 className={`w-5 h-5 ${active ? "text-orange-400" : "text-green-500"}`} />
       )}
-      <span className={`font-bold ${active ? "text-white" : "text-[#666666]"}`}>{text}</span>
+      <span className={`font-bold ${active ? "text-white" : "text-gray-600"}`}>{text}</span>
     </div>
   );
 }

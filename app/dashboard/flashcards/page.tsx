@@ -59,13 +59,49 @@ const INITIAL_CARDS = [
   },
 ];
 
+import { useAuth } from "@/context/AuthContext";
+import { saveFlashcards, getUserUsage } from "@/lib/firestore";
+import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+
 export default function FlashcardsPage() {
-  const [cards, setCards] = useState(INITIAL_CARDS);
+  const { user } = useAuth();
+  const [cards, setCards] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [newCard, setNewCard] = useState({ front: "", back: "", category: "General" });
+
+  useEffect(() => {
+    async function fetchCards() {
+      if (!user) return;
+      try {
+        const q = query(collection(db, "flashcards"), where("userId", "==", user.uid));
+        const snap = await getDocs(q);
+        const fetchedCards: any[] = [];
+        snap.forEach(doc => {
+           const data = doc.data();
+           data.cards.forEach((c: any, idx: number) => {
+              fetchedCards.push({
+                id: doc.id + idx,
+                category: data.topic || "AI",
+                front: c.question,
+                back: c.answer,
+                mastered: false
+              });
+           });
+        });
+        setCards(fetchedCards.length > 0 ? fetchedCards : INITIAL_CARDS);
+      } catch (error) {
+        console.error("Error fetching cards:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchCards();
+  }, [user]);
 
   // 1. Filtering Logic
   const filteredCards = useMemo(() => {
@@ -88,37 +124,61 @@ export default function FlashcardsPage() {
   }, [cards]);
 
   // 3. Handlers
-  const handleAddCard = (e: React.FormEvent) => {
+  const handleAddCard = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newCard.front || !newCard.back) return;
-    const card = {
-        id: Date.now(),
-        ...newCard,
-        mastered: false
-    };
-    setCards([card, ...cards]);
-    setNewCard({ front: "", back: "", category: "General" });
-    setIsAddingNew(false);
+    if (!newCard.front || !newCard.back || !user) return;
+    
+    const cardData = { question: newCard.front, answer: newCard.back };
+    try {
+      await saveFlashcards(user.uid, newCard.category, [cardData]);
+      const card = {
+          id: Date.now(),
+          ...newCard,
+          mastered: false
+      };
+      setCards([card, ...cards]);
+      setNewCard({ front: "", back: "", category: "General" });
+      setIsAddingNew(false);
+    } catch (error) {
+      console.error("Error saving card:", error);
+    }
   };
 
-  const toggleMastery = (id: number) => {
+  const toggleMastery = (id: string | number) => {
     setCards(cards.map(c => c.id === id ? { ...c, mastered: !c.mastered } : c));
   };
 
-  const deleteCard = (id: number) => {
+  const deleteCard = (id: string | number) => {
     setCards(cards.filter(c => c.id !== id));
   };
 
-  const handleAIGenerate = () => {
+  const handleAIGenerate = async () => {
+    if (!user) return;
     setIsGeneratingAI(true);
-    setTimeout(() => {
+    
+    // Simulate AI Generation and save
+    setTimeout(async () => {
       const aiCards = [
-        { id: Date.now() + 1, category: "AI", front: "What is semantic analysis?", back: "The process of drawing meaning from language by studying word relationships.", mastered: false },
-        { id: Date.now() + 2, category: "AI", front: "Define Machine Learning.", back: "A subset of AI that enables systems to learn and improve from experience.", mastered: false }
+        { question: "What is semantic analysis?", answer: "The process of drawing meaning from language by studying word relationships." },
+        { question: "Define Machine Learning.", answer: "A subset of AI that enables systems to learn and improve from experience." }
       ];
-      setCards([...aiCards, ...cards]);
-      setIsGeneratingAI(false);
-      setFilter("AI");
+
+      try {
+        await saveFlashcards(user.uid, "AI", aiCards);
+        const formattedCards = aiCards.map((c, idx) => ({
+            id: Date.now() + idx,
+            category: "AI",
+            front: c.question,
+            back: c.answer,
+            mastered: false
+        }));
+        setCards([...formattedCards, ...cards]);
+        setIsGeneratingAI(false);
+        setFilter("AI");
+      } catch (error) {
+        console.error("Error saving AI cards:", error);
+        setIsGeneratingAI(false);
+      }
     }, 2000);
   };
 

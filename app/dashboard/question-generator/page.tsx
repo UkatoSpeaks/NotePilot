@@ -57,18 +57,63 @@ const MOCK_QUESTIONS = [
   }
 ];
 
+import { useAuth } from "@/context/AuthContext";
+import { saveQuestions, getUserUsage } from "@/lib/firestore";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+
 export default function QuestionGeneratorPage() {
+  const { user } = useAuth();
   const [step, setStep] = useState<GenerationStep>("setup");
-  const [selectedTopic, setSelectedTopic] = useState<number | null>(null);
+  const [notes, setNotes] = useState<any[]>([]);
+  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [difficulty, setDifficulty] = useState("Balanced");
   const [qType, setQType] = useState<string[]>(["Subjective"]);
   const [showAnswers, setShowAnswers] = useState<number[]>([]);
+  const [usage, setUsage] = useState<any>(null);
+  const [totalQuestions, setTotalQuestions] = useState(0);
 
-  const handleGenerate = () => {
-    if (!selectedTopic) return;
+  useEffect(() => {
+    async function fetchData() {
+      if (!user) return;
+      try {
+        // Fetch Notes for topics
+        const notesQ = query(collection(db, "notes"), where("userId", "==", user.uid));
+        const notesSnap = await getDocs(notesQ);
+        setNotes(notesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
+        // Fetch Total Questions Sets
+        const qSetsQ = query(collection(db, "questions"), where("userId", "==", user.uid));
+        const qSetsSnap = await getDocs(qSetsQ);
+        setTotalQuestions(qSetsSnap.size);
+
+        // Usage info
+        getUserUsage(user.uid)
+          .then(setUsage)
+          .catch(e => console.warn("QuestionGenerator: Error fetching usage", e));
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    }
+    fetchData();
+  }, [user]);
+
+  const handleGenerate = async () => {
+    if (!selectedTopic || !user) return;
     setStep("generating");
-    setTimeout(() => {
-      setStep("active");
+
+    const topicData = notes.find(n => n.id === selectedTopic);
+    
+    // Simulate generation and save
+    setTimeout(async () => {
+      try {
+        await saveQuestions(user.uid, topicData?.topic || "Custom Topic", MOCK_QUESTIONS);
+        setStep("active");
+        setTotalQuestions(prev => prev + 1);
+      } catch (error) {
+        console.error("Error saving questions:", error);
+        setStep("setup");
+      }
     }, 2500);
   };
 
@@ -111,7 +156,7 @@ export default function QuestionGeneratorPage() {
               <div className="flex items-center gap-6 bg-white p-6 rounded-4xl border border-gray-100 shadow-2xl shadow-amber-900/5">
                 <div className="text-right">
                   <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Sets Created</p>
-                  <p className="text-3xl font-black text-gray-900">12 Practice Sets</p>
+                  <p className="text-3xl font-black text-gray-900">{totalQuestions} Practice Sets</p>
                 </div>
                 <div className="w-14 h-14 bg-amber-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-amber-500/20">
                   <Trophy className="w-8 h-8" />
@@ -128,22 +173,28 @@ export default function QuestionGeneratorPage() {
                     Select a Topic
                   </h3>
                   <div className="grid sm:grid-cols-2 gap-4">
-                    {MOCK_TOPICS.map((topic) => (
-                      <button 
-                        key={topic.id}
-                        onClick={() => setSelectedTopic(topic.id)}
-                        className={cn(
-                          "p-6 rounded-3xl border-4 text-left transition-all relative group overflow-hidden",
-                          selectedTopic === topic.id 
-                            ? "bg-amber-50/50 border-amber-500 shadow-xl shadow-amber-100" 
-                            : "bg-white border-gray-100 hover:border-amber-200"
-                        )}
-                      >
-                         <p className="text-xs font-black text-amber-600 uppercase tracking-widest mb-1">{topic.subjects} • {topic.board}</p>
-                         <h4 className="text-xl font-black text-gray-900">{topic.title}</h4>
-                         {selectedTopic === topic.id && <CheckCircle2 className="absolute top-4 right-4 w-6 h-6 text-amber-500" />}
-                      </button>
-                    ))}
+                    {notes.length > 0 ? (
+                      notes.map((note) => (
+                        <button 
+                          key={note.id}
+                          onClick={() => setSelectedTopic(note.id)}
+                          className={cn(
+                            "p-6 rounded-3xl border-4 text-left transition-all relative group overflow-hidden",
+                            selectedTopic === note.id 
+                              ? "bg-amber-50/50 border-amber-500 shadow-xl shadow-amber-100" 
+                              : "bg-white border-gray-100 hover:border-amber-200"
+                          )}
+                        >
+                           <p className="text-xs font-black text-amber-600 uppercase tracking-widest mb-1">{note.subject}</p>
+                           <h4 className="text-xl font-black text-gray-900">{note.topic}</h4>
+                           {selectedTopic === note.id && <CheckCircle2 className="absolute top-4 right-4 w-6 h-6 text-amber-500" />}
+                        </button>
+                      ))
+                    ) : (
+                      <div className="col-span-full p-20 text-center bg-gray-50 rounded-[40px] border border-dashed border-gray-200">
+                        <p className="text-gray-400 font-bold italic">No notes found. Create a note first to generate practice questions!</p>
+                      </div>
+                    )}
                   </div>
                 </section>
 

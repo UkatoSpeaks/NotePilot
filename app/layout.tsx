@@ -20,6 +20,8 @@ export const metadata: Metadata = {
   description: "Instantly generate smart study notes, flashcards, and question sets using AI. Designed for class 8-12 students.",
 };
 
+import { AuthProvider } from "@/context/AuthContext";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -28,7 +30,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${poppins.variable}`}>
       <body className="antialiased font-sans selection:bg-primary/30">
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

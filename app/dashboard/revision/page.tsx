@@ -25,19 +25,50 @@ import { cn } from "@/lib/utils";
 
 type RevisionState = "setup" | "active_review" | "completed";
 
-const REVIEW_DATA = [
-  { id: 1, subject: "Physics", topic: "Optics & Lens", points: ["Refractive index depends on light frequency.", "Power of lens is inverse of focal length (in meters).", "Convex lenses are converging; Concave are diverging."] },
-  { id: 2, subject: "History", topic: "Industrial Revolution", points: ["Began in Britain in the late 18th century.", "Steam engine was the core technological driver.", "Led to rapid urbanization and social structural shifts."] },
-  { id: 3, subject: "Biology", topic: "Plant Reproduction", points: ["Double fertilization is unique to angiosperms.", "Pollen grains carry male gametes.", "The ovary develops into the fruit after fertilization."] },
-];
+import { useAuth } from "@/context/AuthContext";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export default function RevisionPage() {
+  const { user } = useAuth();
   const [state, setState] = useState<RevisionState>("setup");
-  const [selectedTopics, setSelectedTopics] = useState<number[]>([1, 2, 3]);
+  const [notes, setNotes] = useState<any[]>([]);
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(60);
   const [isPaused, setIsPaused] = useState(false);
   const [cardsReviewed, setCardsReviewed] = useState(0);
+
+  useEffect(() => {
+    async function fetchNotes() {
+      if (!user) return;
+      try {
+        const q = query(collection(db, "notes"), where("userId", "==", user.uid));
+        const snap = await getDocs(q);
+        const fetchedNotes = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setNotes(fetchedNotes);
+        // Select all by default
+        setSelectedTopics(fetchedNotes.map(n => n.id));
+      } catch (error) {
+        console.error("Error fetching notes:", error);
+      }
+    }
+    fetchNotes();
+  }, [user]);
+
+  const activeCards = useMemo(() => {
+    return notes
+      .filter(n => selectedTopics.includes(n.id))
+      .map(n => ({
+        id: n.id,
+        subject: n.subject,
+        topic: n.topic,
+        points: [
+          n.content.definition,
+          ...(n.content.keyConcepts || [])
+        ]
+      }));
+  }, [notes, selectedTopics]);
 
   // Timer Effect
   useEffect(() => {
@@ -52,11 +83,7 @@ export default function RevisionPage() {
     return () => clearInterval(interval);
   }, [state, isPaused, timeLeft]);
 
-  const activeCards = useMemo(() => {
-    return REVIEW_DATA.filter(item => selectedTopics.includes(item.id));
-  }, [selectedTopics]);
-
-  const toggleTopic = (id: number) => {
+  const toggleTopic = (id: string) => {
     setSelectedTopics(prev => 
       prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]
     );
@@ -85,7 +112,7 @@ export default function RevisionPage() {
 
   const reset = () => {
     setState("setup");
-    setSelectedTopics([1, 2, 3]);
+    setSelectedTopics(notes.map(n => n.id));
   };
 
   return (
@@ -132,37 +159,43 @@ export default function RevisionPage() {
                      <Brain className="w-7 h-7 text-green-600" /> Choose Your Focus
                    </h3>
                    <div className="grid sm:grid-cols-2 gap-4">
-                      {REVIEW_DATA.map((item) => (
-                        <div 
-                          key={item.id}
-                          onClick={() => toggleTopic(item.id)}
-                          className={cn(
-                            "p-6 rounded-3xl border-4 transition-all cursor-pointer flex items-center justify-between group",
-                            selectedTopics.includes(item.id) 
-                              ? "bg-green-50/50 border-green-500" 
-                              : "bg-gray-50 border-transparent hover:bg-gray-100"
-                          )}
-                        >
-                           <div className="flex items-center gap-4">
-                              <div className={cn(
-                                "w-12 h-12 rounded-xl flex items-center justify-center text-white font-black",
-                                selectedTopics.includes(item.id) ? "bg-green-600" : "bg-gray-300"
-                              )}>
-                                 {item.subject[0]}
-                              </div>
-                              <div>
-                                 <p className="font-black text-gray-900">{item.topic}</p>
-                                 <p className="text-xs font-bold text-gray-400 uppercase">{item.subject}</p>
-                              </div>
-                           </div>
-                           <div className={cn(
-                             "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all",
-                             selectedTopics.includes(item.id) ? "border-green-600 bg-green-600 text-white" : "border-gray-200"
-                           )}>
-                              {selectedTopics.includes(item.id) && <CheckCircle2 className="w-4 h-4" />}
-                           </div>
+                      {notes.length > 0 ? (
+                        notes.map((item) => (
+                          <div 
+                            key={item.id}
+                            onClick={() => toggleTopic(item.id)}
+                            className={cn(
+                              "p-6 rounded-3xl border-4 transition-all cursor-pointer flex items-center justify-between group",
+                              selectedTopics.includes(item.id) 
+                                ? "bg-green-50/50 border-green-500" 
+                                : "bg-gray-50 border-transparent hover:bg-gray-100"
+                            )}
+                          >
+                             <div className="flex items-center gap-4">
+                                <div className={cn(
+                                  "w-12 h-12 rounded-xl flex items-center justify-center text-white font-black",
+                                  selectedTopics.includes(item.id) ? "bg-green-600" : "bg-gray-300"
+                                )}>
+                                   {item.subject[0]}
+                                </div>
+                                <div>
+                                   <p className="font-black text-gray-900">{item.topic}</p>
+                                   <p className="text-xs font-bold text-gray-400 uppercase">{item.subject}</p>
+                                </div>
+                             </div>
+                             <div className={cn(
+                               "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all",
+                               selectedTopics.includes(item.id) ? "border-green-600 bg-green-600 text-white" : "border-gray-200"
+                             )}>
+                                {selectedTopics.includes(item.id) && <CheckCircle2 className="w-4 h-4" />}
+                             </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="col-span-full p-20 text-center bg-gray-50 rounded-[40px] border border-dashed border-gray-200">
+                          <p className="text-gray-400 font-bold italic">No notes created yet. Revision Mode requires at least one study note!</p>
                         </div>
-                      ))}
+                      )}
                    </div>
                 </section>
 

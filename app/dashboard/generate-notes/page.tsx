@@ -14,40 +14,30 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { NoteViewer } from "@/components/ui/note-viewer";
+import { useAuth } from "@/context/AuthContext";
+import { saveNote } from "@/lib/firestore";
 
 const MOCK_NOTES = {
-  title: "Cell Division & Genetics",
-  subject: "Biology",
-  sections: [
-    {
-      title: "Introduction to Mitosis",
-      content: [
-        "Mitosis is the process of cell division that results in two genetically identical daughter cells.",
-        "It consists of four main phases: Prophase, Metaphase, Anaphase, and Telophase.",
-        "Essential for growth, repair, and asexual reproduction in multicellular organisms."
-      ]
-    },
-    {
-      title: "Key Phases of Mitosis",
-      content: [
-        "Prophase: Chromosomes condense, nuclear envelope breaks down.",
-        "Metaphase: Chromosomes align at the metaphase plate (cell equator).",
-        "Anaphase: Sister chromatids separate and move to opposite poles.",
-        "Telophase: Nuclear envelopes reform, chromosomes decondense."
-      ]
-    },
-    {
-      title: "Genetic Variation in Meiosis",
-      content: [
-        "Unlike mitosis, meiosis results in four genetically diverse haploid cells.",
-        "Crossing over occurs during Prophase I, swapping genetic material between homologous chromosomes.",
-        "Independent assortment further increases genetic diversity among offspring."
-      ]
-    }
+  definition: "Mitosis is a fundamental process for life on Earth, where a single cell divides into two genetically identical daughter cells, maintaining the chromosome number of the original cell.",
+  keyConcepts: [
+    "Four phases of mitosis (Prophase, Metaphase, Anaphase, Telophase)",
+    "Cytokinesis (splitting of the cytoplasm)",
+    "Role in growth, tissue repair, and asexual reproduction"
+  ],
+  examples: [
+    "Skin cells dividing to heal a wound",
+    "Root tip growth in plants",
+    "Single-layer tissue replacement in the digestive tract"
+  ],
+  examQuestions: [
+    "Distinguish between Cytokinesis and Mitosis.",
+    "Explain the significance of the Metaphase plate.",
+    "What would happen if sister chromatids fail to separate during Anaphase?"
   ]
 };
 
 export default function GenerateNotesPage() {
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showResult, setShowResult] = useState(false);
@@ -58,12 +48,20 @@ export default function GenerateNotesPage() {
     board: ""
   });
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
+    if (!user) return;
     setIsGenerating(true);
+    
     // Simulate generation time
-    setTimeout(() => {
-      setIsGenerating(false);
-      setShowResult(true);
+    setTimeout(async () => {
+      try {
+        await saveNote(user.uid, formData.subject, formData.topic, MOCK_NOTES);
+        setIsGenerating(false);
+        setShowResult(true);
+      } catch (error) {
+        console.error("Error saving note:", error);
+        setIsGenerating(false);
+      }
     }, 2500);
   };
 
@@ -82,7 +80,11 @@ export default function GenerateNotesPage() {
                 <RefreshCw className="w-4 h-4" /> Start New
             </Button>
         </header>
-        <NoteViewer {...MOCK_NOTES} />
+        <NoteViewer 
+          title={formData.topic} 
+          subject={formData.subject} 
+          content={MOCK_NOTES} 
+        />
       </div>
     );
   }
