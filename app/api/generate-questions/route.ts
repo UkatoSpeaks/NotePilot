@@ -7,7 +7,7 @@ const QUESTION_LIMIT = 3;
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId, topic, difficulty } = await req.json();
+    const { userId, topic, subject, difficulty } = await req.json();
 
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     }
 
     const prompt = `
-      Generate a balanced exam paper for the topic: ${topic}. 
+      Generate a balanced exam paper for the subject: ${subject}, topic: ${topic}. 
       Difficulty level: ${difficulty}.
       Include:
       - 2 Multiple Choice Questions (MCQ)

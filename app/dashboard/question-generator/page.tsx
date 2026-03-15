@@ -26,36 +26,6 @@ import { cn } from "@/lib/utils";
 
 type GenerationStep = "setup" | "generating" | "active";
 
-const MOCK_TOPICS = [
-  { id: 1, title: "Newton's Laws of Motion", board: "CBSE", subjects: "Physics" },
-  { id: 2, title: "Cell Structure & Function", board: "ICSE", subjects: "Biology" },
-  { id: 3, title: "The Rise of Nationalism", board: "CBSE", subjects: "History" },
-  { id: 4, title: "Quadratic Equations", board: "IGCSE", subjects: "Mathematics" },
-];
-
-const MOCK_QUESTIONS = [
-  {
-    id: 1,
-    question: "Explain the concept of Inertia and how it relates to Newton's First Law of Motion.",
-    answer: "Inertia is the inherent property of a body by virtue of which it resists any change in its state of rest or uniform motion. Newton's First Law (Law of Inertia) states that an object will remain at rest or in uniform motion unless acted upon by an external force.",
-    marks: 5,
-    type: "Short Answer"
-  },
-  {
-    id: 2,
-    question: "What is the mathematical expression for Newton's Second Law? Provide unit details.",
-    answer: "F = ma, where F is the net force applied (in Newtons), m is the mass (in kg), and a is the acceleration (in m/s²).",
-    marks: 3,
-    type: "Calculation"
-  },
-  {
-    id: 3,
-    question: "A ball thrown upwards returns to the thrower after 6 seconds. Find the velocity with which it was thrown.",
-    answer: "Using v = u + at. At max height, v = 0, t = 3s (half of time), a = -9.8 m/s². 0 = u - 9.8(3) => u = 29.4 m/s.",
-    marks: 5,
-    type: "Numerical"
-  }
-];
 
 import { useAuth } from "@/context/AuthContext";
 import { saveQuestions, getUserUsage } from "@/lib/firestore";
@@ -72,6 +42,7 @@ export default function QuestionGeneratorPage() {
   const [showAnswers, setShowAnswers] = useState<number[]>([]);
   const [usage, setUsage] = useState<any>(null);
   const [totalQuestions, setTotalQuestions] = useState(0);
+  const [generatedQuestions, setGeneratedQuestions] = useState<any[]>([]);
 
   useEffect(() => {
     async function fetchData() {
@@ -103,18 +74,39 @@ export default function QuestionGeneratorPage() {
     setStep("generating");
 
     const topicData = notes.find(n => n.id === selectedTopic);
+    const targetTopic = topicData?.topic || "Custom Topic";
+    const targetSubject = topicData?.subject || "General";
     
-    // Simulate generation and save
-    setTimeout(async () => {
-      try {
-        await saveQuestions(user.uid, topicData?.topic || "Custom Topic", MOCK_QUESTIONS);
+    try {
+      const response = await fetch("/api/generate-questions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.uid,
+          topic: targetTopic,
+          subject: targetSubject,
+          difficulty: difficulty
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to generate questions");
+      }
+
+      const result = await response.json();
+      if (result.success) {
+        setGeneratedQuestions(result.questions);
         setStep("active");
         setTotalQuestions(prev => prev + 1);
-      } catch (error) {
-        console.error("Error saving questions:", error);
-        setStep("setup");
+      } else {
+        throw new Error(result.error || "Unknown error occurred");
       }
-    }, 2500);
+    } catch (error: any) {
+      console.error("Error generating questions:", error);
+      alert(error.message || "Something went wrong while generating questions.");
+      setStep("setup");
+    }
   };
 
   const toggleAnswer = (id: number) => {
@@ -332,7 +324,11 @@ export default function QuestionGeneratorPage() {
                       <Zap className="w-5 h-5 text-amber-600" />
                       <span className="text-lg font-black text-gray-900">Study Mode</span>
                    </div>
-                   <Button variant="outline" className="rounded-2xl h-12 px-6 font-black border-2 gap-2">
+                   <Button 
+                     onClick={handleGenerate}
+                     variant="outline" 
+                     className="rounded-2xl h-12 px-6 font-black border-2 gap-2"
+                   >
                      <RotateCcw className="w-4 h-4" /> Regenerate
                    </Button>
                 </div>
@@ -340,9 +336,9 @@ export default function QuestionGeneratorPage() {
 
              <div className="grid lg:grid-cols-12 gap-10">
                 <div className="lg:col-span-8 space-y-8">
-                  {MOCK_QUESTIONS.map((q, idx) => (
+                  {generatedQuestions.map((q, idx) => (
                     <motion.div 
-                      key={q.id}
+                      key={idx}
                       initial={{ opacity: 0, y: 30 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.1 }}
@@ -366,21 +362,21 @@ export default function QuestionGeneratorPage() {
                        <div className="pt-8 border-t border-dashed border-gray-100 space-y-6">
                           <Button 
                             variant="ghost" 
-                            onClick={() => toggleAnswer(q.id)}
+                            onClick={() => toggleAnswer(idx)}
                             className={cn(
                               "w-full h-14 rounded-2xl font-black flex items-center justify-between px-6 transition-all",
-                              showAnswers.includes(q.id) ? "bg-amber-50 text-amber-600" : "bg-gray-50 text-gray-400 hover:bg-gray-100"
+                              showAnswers.includes(idx) ? "bg-amber-50 text-amber-600" : "bg-gray-50 text-gray-400 hover:bg-gray-100"
                             )}
                           >
                              <div className="flex items-center gap-2">
-                               {showAnswers.includes(q.id) ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                               {showAnswers.includes(q.id) ? "Hide Model Answer" : "Reveal Model Answer"}
+                               {showAnswers.includes(idx) ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                               {showAnswers.includes(idx) ? "Hide Model Answer" : "Reveal Model Answer"}
                              </div>
-                             <CheckCircle2 className={cn("w-5 h-5 transition-opacity", showAnswers.includes(q.id) ? "opacity-100" : "opacity-0")} />
+                             <CheckCircle2 className={cn("w-5 h-5 transition-opacity", showAnswers.includes(idx) ? "opacity-100" : "opacity-0")} />
                           </Button>
 
                           <AnimatePresence>
-                            {showAnswers.includes(q.id) && (
+                            {showAnswers.includes(idx) && (
                               <motion.div 
                                 initial={{ height: 0, opacity: 0 }}
                                 animate={{ height: "auto", opacity: 1 }}
@@ -389,7 +385,23 @@ export default function QuestionGeneratorPage() {
                               >
                                  <div className="bg-amber-50/30 p-8 rounded-3xl border border-amber-100/50">
                                     <p className="font-black text-amber-700 uppercase tracking-widest text-[10px] mb-4">Official Model Answer</p>
-                                    <p className="text-lg text-amber-900/80 font-bold leading-relaxed">{q.answer}</p>
+                                    <div className="text-lg text-amber-900/80 font-bold leading-relaxed space-y-4">
+                                       {q.options && (
+                                         <div className="grid grid-cols-2 gap-3 mb-4">
+                                            {q.options.map((opt: string, i: number) => (
+                                              <div key={i} className={cn(
+                                                "p-4 rounded-xl border-2 font-black transition-all",
+                                                opt.startsWith(q.answer) || opt === q.answer
+                                                  ? "bg-green-50 border-green-500 text-green-700"
+                                                  : "bg-white border-gray-100 text-gray-400"
+                                              )}>
+                                                {opt}
+                                              </div>
+                                            ))}
+                                         </div>
+                                       )}
+                                       <p>{q.answer}</p>
+                                    </div>
                                  </div>
                               </motion.div>
                             )}

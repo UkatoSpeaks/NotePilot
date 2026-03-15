@@ -21,43 +21,6 @@ import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-const INITIAL_CARDS = [
-  {
-    id: 1,
-    category: "Physics",
-    front: "What is Newton's First Law of Motion?",
-    back: "An object remains at rest or in uniform motion unless acted upon by an external force (Law of Inertia).",
-    mastered: true
-  },
-  {
-    id: 2,
-    category: "Biology",
-    front: "Which organelle is the powerhouse of the cell?",
-    back: "The Mitochondria, responsible for producing ATP through cellular respiration.",
-    mastered: false
-  },
-  {
-    id: 3,
-    category: "Chemistry",
-    front: "What is an Ionic Bond?",
-    back: "A chemical bond formed by the complete transfer of electrons from one atom to another.",
-    mastered: true
-  },
-  {
-    id: 4,
-    category: "History",
-    front: "When did the French Revolution begin?",
-    back: "The French Revolution began in 1789 with the Storming of the Bastille.",
-    mastered: false
-  },
-  {
-    id: 5,
-    category: "Math",
-    front: "What is the Pythagorean Theorem?",
-    back: "In a right-angled triangle, a² + b² = c², where c is the hypotenuse.",
-    mastered: false
-  },
-];
 
 import { useAuth } from "@/context/AuthContext";
 import { saveFlashcards, getUserUsage } from "@/lib/firestore";
@@ -93,7 +56,7 @@ export default function FlashcardsPage() {
               });
            });
         });
-        setCards(fetchedCards.length > 0 ? fetchedCards : INITIAL_CARDS);
+        setCards(fetchedCards);
       } catch (error) {
         console.error("Error fetching cards:", error);
       } finally {
@@ -156,16 +119,23 @@ export default function FlashcardsPage() {
     if (!user) return;
     setIsGeneratingAI(true);
     
-    // Simulate AI Generation and save
-    setTimeout(async () => {
-      const aiCards = [
-        { question: "What is semantic analysis?", answer: "The process of drawing meaning from language by studying word relationships." },
-        { question: "Define Machine Learning.", answer: "A subset of AI that enables systems to learn and improve from experience." }
-      ];
+    try {
+      // Get the last note as a default topic if we want, or ask user?
+      // For now, let's just use "General Knowledge" or the last note topic.
+      const response = await fetch("/api/generate-flashcards", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.uid,
+          topic: "Current Study Topic"
+        })
+      });
 
-      try {
-        await saveFlashcards(user.uid, "AI", aiCards);
-        const formattedCards = aiCards.map((c, idx) => ({
+      if (!response.ok) throw new Error("Failed to generate cards");
+
+      const result = await response.json();
+      if (result.success) {
+        const formattedCards = result.cards.map((c: any, idx: number) => ({
             id: Date.now() + idx,
             category: "AI",
             front: c.question,
@@ -173,13 +143,13 @@ export default function FlashcardsPage() {
             mastered: false
         }));
         setCards([...formattedCards, ...cards]);
-        setIsGeneratingAI(false);
         setFilter("AI");
-      } catch (error) {
-        console.error("Error saving AI cards:", error);
-        setIsGeneratingAI(false);
       }
-    }, 2000);
+    } catch (error) {
+      console.error("Error generating AI cards:", error);
+    } finally {
+      setIsGeneratingAI(false);
+    }
   };
 
   return (
