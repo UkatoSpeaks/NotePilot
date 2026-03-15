@@ -139,7 +139,7 @@ const Hero = () => {
           <div className="w-full h-full bg-[#0a0a12] rounded-xl border border-border flex items-center justify-center overflow-hidden">
             <div className="w-full h-full bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
               <div className="flex flex-col items-center gap-4">
-                <Rocket size={48} className="text-primary animate-pulse" />
+                <img src="/logo.png" alt="NotePilot Logo" className="w-16 h-16 object-contain animate-pulse" />
                 <div className="h-1.5 w-40 bg-white/10 rounded-full overflow-hidden">
                   <motion.div
                     animate={{ x: ["-100%", "100%"] }}

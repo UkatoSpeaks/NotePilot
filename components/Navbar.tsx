@@ -43,8 +43,8 @@ const Navbar = () => {
       <div className="max-w-6xl mx-auto px-6 flex justify-between items-center relative">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group shrink-0">
-          <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(124,58,237,0.4)] group-hover:scale-110 transition-transform">
-            <Rocket className="text-white" size={20} />
+          <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(124,58,237,0.4)] group-hover:scale-110 transition-transform overflow-hidden px-1">
+            <img src="/logo.png" alt="NotePilot Logo" className="w-full h-full object-contain" />
           </div>
           <span className="text-xl font-bold tracking-tight gradient-text">
             NotePilot

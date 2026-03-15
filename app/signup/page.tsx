@@ -78,8 +78,8 @@ export default function SignupPage() {
       >
         <div className="text-center mb-10">
           <Link href="/" className="inline-flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 bg-linear-to-tr from-[#2D6A4F] to-[#40916c] rounded-2xl flex items-center justify-center text-white shadow-xl shadow-green-900/20">
-              <Zap className="w-6 h-6 fill-current" />
+            <div className="w-12 h-12 bg-linear-to-tr from-[#2D6A4F] to-[#40916c] rounded-2xl flex items-center justify-center text-white shadow-xl shadow-green-900/20 overflow-hidden">
+               <img src="/logo.png" alt="NotePilot Logo" className="w-9 h-9 object-contain" />
             </div>
             <span className="text-2xl font-black tracking-tight text-[#2D6A4F]">NotePilot</span>
           </Link>

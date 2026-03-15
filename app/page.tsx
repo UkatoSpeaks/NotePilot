@@ -18,7 +18,8 @@ import {
   XCircle,
   Zap,
   Layout,
-  MessageSquare
+  MessageSquare,
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -38,25 +39,30 @@ export default function LandingPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     
+    // Ensure elements are invisible initially if they are going to be animated "from"
+    gsap.set([headlineRef.current, heroVisualRef.current, ".hero-cta"], { opacity: 0 });
+
     // Hero Entrance Animations
-    const tl = gsap.timeline();
-    tl.from(headlineRef.current, {
-      y: 50,
-      opacity: 0,
+    const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+    
+    tl.to(headlineRef.current, {
+      y: 0,
+      opacity: 1,
       duration: 1,
-      ease: "power3.out"
+      startAt: { y: 50 }
     })
-    .from(".hero-cta", {
-      y: 20,
-      opacity: 0,
+    .to(".hero-cta", {
+      y: 0,
+      opacity: 1,
       duration: 0.8,
-      stagger: 0.2
+      stagger: 0.2,
+      startAt: { y: 20 }
     }, "-=0.5")
-    .from(heroVisualRef.current, {
-      scale: 0.9,
-      opacity: 0,
+    .to(heroVisualRef.current, {
+      scale: 1,
+      opacity: 1,
       duration: 1,
-      ease: "power2.out"
+      startAt: { scale: 0.9 }
     }, "-=0.8");
 
     // AI Typing Animation Simulation
@@ -82,16 +88,16 @@ export default function LandingPage() {
     return () => {
       tl.kill();
     };
-  }, []);
+  }, [loading]); // Re-run if loading state changes to ensure refs are attached
 
   return (
-    <div className="min-h-screen bg-[#FDFCF8] text-[#1A1A1A] font-sans">
+    <div className="min-h-screen bg-[#FDFCF8] text-[#1A1A1A] font-sans overflow-hidden">
       {/* 1. Enhanced Navigation */}
       <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-7xl">
         <div className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-[32px] px-8 h-20 flex items-center justify-between shadow-[0_8px_32px_0_rgba(45,106,79,0.08)]">
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-11 h-11 bg-linear-to-tr from-[#2D6A4F] to-[#40916c] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-green-900/20 transform group-hover:rotate-15 transition-all duration-500">
-              <Zap className="w-6 h-6 fill-current" />
+            <div className="w-11 h-11 bg-linear-to-tr from-[#2D6A4F] to-[#40916c] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-green-900/20 transform group-hover:rotate-15 transition-all duration-500 overflow-hidden p-1.5">
+              <img src="/logo.png" alt="NotePilot Logo" className="w-full h-full object-contain" />
             </div>
             <div className="flex flex-col">
               <span className="text-xl font-black tracking-tight text-[#2D6A4F] leading-none">NotePilot</span>
@@ -137,152 +143,153 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* 1. Hero Section */}
-      <motion.section className="pt-32 pb-20 px-6 max-w-7xl mx-auto">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          <div>
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-100 text-[#F9A11B] rounded-full text-sm font-black mb-6">
-              <Star className="w-4 h-4 fill-current" />
-              TOP RATED STUDY TOOL
-            </div>
-            <h1 ref={headlineRef} className="text-5xl md:text-7xl font-black leading-[1.1] mb-8">
-              Generate <span className="custom-underline">Smart Study Notes</span> in Seconds with AI
-            </h1>
-            <p className="text-xl text-gray-600 font-medium leading-relaxed mb-10 max-w-lg">
-              Turn any topic into structured notes, flashcards, and exam questions instantly. Study smarter, not harder.
-            </p>
-            <div className="flex flex-wrap gap-4 hero-cta">
-              {!loading && user ? (
-                <>
-                  <Link href="/dashboard">
-                    <Button className="bg-[#F9A11B] hover:bg-[#e69110] text-white rounded-full px-8 py-7 text-lg font-black shadow-xl shadow-orange-500/20 cursor-pointer">
-                      Go to Dashboard
-                      <ArrowUpRight className="ml-2 w-6 h-6" />
-                    </Button>
-                  </Link>
-                  <Link href="/dashboard/generate-notes">
-                    <Button variant="outline" className="border-2 border-[#2D6A4F] text-[#2D6A4F] hover:bg-[#2D6A4F] hover:text-white rounded-full px-8 py-7 text-lg font-black transition-all cursor-pointer">
-                      Quick Study
-                    </Button>
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <Link href="/dashboard/generate-notes">
-                    <Button className="bg-[#F9A11B] hover:bg-[#e69110] text-white rounded-full px-8 py-7 text-lg font-black shadow-xl shadow-orange-500/20 cursor-pointer">
-                      Generate Notes
-                      <ArrowUpRight className="ml-2 w-6 h-6" />
-                    </Button>
-                  </Link>
-                  <Link href="#features">
-                    <Button variant="outline" className="border-2 border-[#2D6A4F] text-[#2D6A4F] hover:bg-[#2D6A4F] hover:text-white rounded-full px-8 py-7 text-lg font-black transition-all cursor-pointer">
-                      Learn More
-                    </Button>
-                  </Link>
-                </>
-              )}
-            </div>
-            
-            <div className="mt-12 flex items-center gap-4 hero-cta opacity-80">
-              <div className="flex -space-x-4">
-                {[1,2,3,4].map(i => (
-                  <motion.div 
-                    key={i} 
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 1 + (i * 0.1) }}
-                    className="w-10 h-10 rounded-full border-4 border-white bg-gray-200 overflow-hidden relative shadow-sm"
-                  >
-                    <div className={`absolute inset-0 bg-blue-${i*100+200}`} />
-                  </motion.div>
-                ))}
+      <main>
+        {/* 1. Hero Section (Older Version Restored & Fixed) */}
+        <motion.section className="pt-48 pb-20 px-6 max-w-7xl mx-auto min-h-[90vh] flex items-center">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-100 text-[#F9A11B] rounded-full text-sm font-black mb-6">
+                <Star className="w-4 h-4 fill-current" />
+                TOP RATED STUDY TOOL
               </div>
-              <p className="text-sm font-bold flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                Joined by 10,000+ Students
+              <h1 ref={headlineRef} className="text-5xl md:text-7xl font-black leading-[1.1] mb-8">
+                Generate <span className="custom-underline">Smart Study Notes</span> in Seconds with AI
+              </h1>
+              <p className="text-xl text-gray-600 font-medium leading-relaxed mb-10 max-w-lg">
+                Turn any topic into structured notes, flashcards, and exam questions instantly. Study smarter, not harder.
               </p>
+              <div className="flex flex-wrap gap-4 hero-cta">
+                {!loading && user ? (
+                  <>
+                    <Link href="/dashboard">
+                      <Button className="bg-[#F9A11B] hover:bg-[#e69110] text-white rounded-full px-8 py-7 text-lg font-black shadow-xl shadow-orange-500/20 cursor-pointer">
+                        Go to Dashboard
+                        <ArrowUpRight className="ml-2 w-6 h-6" />
+                      </Button>
+                    </Link>
+                    <Link href="/dashboard/generate-notes">
+                      <Button variant="outline" className="border-2 border-[#2D6A4F] text-[#2D6A4F] hover:bg-[#2D6A4F] hover:text-white rounded-full px-8 py-7 text-lg font-black transition-all cursor-pointer">
+                        Quick Study
+                      </Button>
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/dashboard/generate-notes">
+                      <Button className="bg-[#F9A11B] hover:bg-[#e69110] text-white rounded-full px-8 py-7 text-lg font-black shadow-xl shadow-orange-500/20 cursor-pointer">
+                        Generate Notes
+                        <ArrowUpRight className="ml-2 w-6 h-6" />
+                      </Button>
+                    </Link>
+                    <Link href="#features">
+                      <Button variant="outline" className="border-2 border-[#2D6A4F] text-[#2D6A4F] hover:bg-[#2D6A4F] hover:text-white rounded-full px-8 py-7 text-lg font-black transition-all cursor-pointer">
+                        Learn More
+                      </Button>
+                    </Link>
+                  </>
+                )}
+              </div>
+              
+              <div className="mt-12 flex items-center gap-4 hero-cta opacity-80">
+                <div className="flex -space-x-4">
+                  {[1,2,3,4].map(i => (
+                    <motion.div 
+                      key={i} 
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 1 + (i * 0.1) }}
+                      className="w-10 h-10 rounded-full border-4 border-white bg-gray-200 overflow-hidden relative shadow-sm"
+                    >
+                      <div className={`absolute inset-0 bg-blue-${i*100+200}`} />
+                    </motion.div>
+                  ))}
+                </div>
+                <p className="text-sm font-bold flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                  Joined by 10,000+ Students
+                </p>
+              </div>
+            </div>
+
+            <div ref={heroVisualRef} className="relative">
+              {/* Extremely Premium Mock AI Visual */}
+              <div className="bg-[#2D6A4F] rounded-[48px] p-10 shadow-[0_20px_50px_rgba(45,106,79,0.3)] relative z-10 overflow-hidden border border-white/10 group hover:shadow-[0_20px_60px_rgba(45,106,79,0.5)] transition-all duration-700">
+                 {/* Header of the mock UI */}
+                 <div className="flex items-center justify-between mb-8 border-b border-white/10 pb-6">
+                    <div className="flex gap-2">
+                      <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
+                      <div className="w-3 h-3 rounded-full bg-[#febc2e]" />
+                      <div className="w-3 h-3 rounded-full bg-[#28c840]" />
+                    </div>
+                    <div className="px-3 py-1 bg-white/5 rounded-full border border-white/10">
+                      <span className="text-[10px] font-black text-[#F9A11B] tracking-[0.2em] uppercase">NotePilot AI Engine v2.0</span>
+                    </div>
+                 </div>
+                 
+                 <div className="space-y-6">
+                    <div className="bg-white/5 p-6 rounded-3xl border border-white/10 backdrop-blur-xl">
+                      <div className="flex items-center gap-4 mb-4">
+                         <div className="p-2 bg-orange-400/20 rounded-lg overflow-hidden w-9 h-9 flex items-center justify-center">
+                            <img src="/logo.png" alt="Mascot" className="w-6 h-6 object-contain" />
+                         </div>
+                         <div className="flex flex-col">
+                           <span className="text-[10px] font-black text-white/40 uppercase tracking-tighter">Current Topic</span>
+                           <span className="text-white font-black text-lg">Newton's Laws of Motion</span>
+                         </div>
+                      </div>
+                      
+                      {/* Animated scanning line */}
+                      <div className="h-px bg-linear-to-r from-transparent via-orange-400 to-transparent w-full relative">
+                          <div className="absolute inset-0 bg-orange-400 blur-sm opacity-50" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                       {[
+                          { label: "Concept", width: "w-3/4", color: "bg-orange-400" },
+                          { label: "Formula", width: "w-1/2", color: "bg-orange-500 shadow-[0_0_15px_rgba(249,161,27,0.4)]" },
+                          { label: "Example", width: "w-2/3", color: "bg-orange-300" }
+                       ].map((line, idx) => (
+                          <div key={idx} className="flex items-center gap-4 group/line">
+                             <div className={`w-2 h-2 rounded-full ${line.color}`} />
+                             <div className="flex-1 h-3 bg-white/10 rounded-full overflow-hidden">
+                                <div className={`ai-line h-full ${line.color} rounded-full transition-all duration-500`} style={{ width: '0%' }} />
+                             </div>
+                          </div>
+                       ))}
+                    </div>
+
+                    <div className="mt-8 pt-8 border-t border-white/10">
+                      <div className="flex items-center justify-between">
+                         <div className="flex gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-orange-400/20 flex items-center justify-center">
+                               <Zap className="w-4 h-4 text-orange-400 fill-current" />
+                            </div>
+                            <div>
+                               <p className="text-[10px] font-black text-white/50 uppercase">Analysis</p>
+                               <p className="text-xs font-black text-white">Exam High Priority</p>
+                            </div>
+                         </div>
+                         <Button className="h-8 rounded-full bg-white text-[#2D6A4F] text-[10px] font-black hover:bg-orange-400 hover:text-white transition-all uppercase tracking-widest">
+                            View Details
+                         </Button>
+                      </div>
+                    </div>
+                 </div>
+
+                 {/* Ambient Glows */}
+                 <div className="absolute -top-20 -right-20 w-64 h-64 bg-orange-400 rounded-full blur-[120px] opacity-20" />
+                 <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-white rounded-full blur-[100px] opacity-10" />
+              </div>
+              
+              {/* Background elements */}
+              <div className="absolute -top-10 -right-10 w-full h-full border-2 border-dashed border-[#F9A11B]/20 rounded-full animate-spin-slow" />
+              <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-[#F9A11B] rounded-full blur-[80px] opacity-20 z-0" />
+              <div className="absolute top-1/4 -right-1/4 w-48 h-48 bg-[#2D6A4F]/10 rounded-full blur-3xl floating-blob" />
+              <div className="absolute -bottom-1/4 -left-1/4 w-64 h-64 bg-orange-400/10 rounded-full blur-3xl floating-blob" />
             </div>
           </div>
-
-          <div ref={heroVisualRef} className="relative">
-            {/* Extremely Premium Mock AI Visual */}
-            <div className="bg-[#2D6A4F] rounded-[48px] p-10 shadow-[0_20px_50px_rgba(45,106,79,0.3)] relative z-10 overflow-hidden border border-white/10 group hover:shadow-[0_20px_60px_rgba(45,106,79,0.5)] transition-all duration-700">
-               {/* Header of the mock UI */}
-               <div className="flex items-center justify-between mb-8 border-b border-white/10 pb-6">
-                  <div className="flex gap-2">
-                    <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
-                    <div className="w-3 h-3 rounded-full bg-[#febc2e]" />
-                    <div className="w-3 h-3 rounded-full bg-[#28c840]" />
-                  </div>
-                  <div className="px-3 py-1 bg-white/5 rounded-full border border-white/10">
-                    <span className="text-[10px] font-black text-[#F9A11B] tracking-[0.2em] uppercase">NotePilot AI Engine v2.0</span>
-                  </div>
-               </div>
-               
-               <div className="space-y-6">
-                  <div className="bg-white/5 p-6 rounded-3xl border border-white/10 backdrop-blur-xl">
-                    <div className="flex items-center gap-4 mb-4">
-                       <div className="p-2 bg-orange-400/20 rounded-lg">
-                          <Brain className="w-5 h-5 text-orange-400" />
-                       </div>
-                       <div className="flex flex-col">
-                         <span className="text-[10px] font-black text-white/40 uppercase tracking-tighter">Current Topic</span>
-                         <span className="text-white font-black text-lg">Newton's Laws of Motion</span>
-                       </div>
-                    </div>
-                    
-                    {/* Animated scanning line */}
-                    <div className="h-px bg-linear-to-r from-transparent via-orange-400 to-transparent w-full relative">
-                        <div className="absolute inset-0 bg-orange-400 blur-sm opacity-50" />
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                     {[
-                        { label: "Concept", width: "w-3/4", color: "bg-orange-400" },
-                        { label: "Formula", width: "w-1/2", color: "bg-orange-500 shadow-[0_0_15px_rgba(249,161,27,0.4)]" },
-                        { label: "Example", width: "w-2/3", color: "bg-orange-300" }
-                     ].map((line, idx) => (
-                        <div key={idx} className="flex items-center gap-4 group/line">
-                           <div className={`w-2 h-2 rounded-full ${line.color}`} />
-                           <div className="flex-1 h-3 bg-white/10 rounded-full overflow-hidden">
-                              <div className={`ai-line h-full ${line.color} rounded-full transition-all duration-500`} style={{ width: '0%' }} />
-                           </div>
-                        </div>
-                     ))}
-                  </div>
-
-                  <div className="mt-8 pt-8 border-t border-white/10">
-                    <div className="flex items-center justify-between">
-                       <div className="flex gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-orange-400/20 flex items-center justify-center">
-                             <Zap className="w-4 h-4 text-orange-400 fill-current" />
-                          </div>
-                          <div>
-                             <p className="text-[10px] font-black text-white/50 uppercase">Analysis</p>
-                             <p className="text-xs font-black text-white">Exam High Priority</p>
-                          </div>
-                       </div>
-                       <Button className="h-8 rounded-full bg-white text-[#2D6A4F] text-[10px] font-black hover:bg-orange-400 hover:text-white transition-all uppercase tracking-widest">
-                          View Details
-                       </Button>
-                    </div>
-                  </div>
-               </div>
-
-               {/* Ambient Glows */}
-               <div className="absolute -top-20 -right-20 w-64 h-64 bg-orange-400 rounded-full blur-[120px] opacity-20" />
-               <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-white rounded-full blur-[100px] opacity-10" />
-            </div>
-            
-            {/* Background elements */}
-            <div className="absolute -top-10 -right-10 w-full h-full border-2 border-dashed border-[#F9A11B]/20 rounded-full animate-spin-slow" />
-            <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-[#F9A11B] rounded-full blur-[80px] opacity-20 z-0" />
-            <div className="absolute top-1/4 -right-1/4 w-48 h-48 bg-[#2D6A4F]/10 rounded-full blur-3xl floating-blob" />
-            <div className="absolute -bottom-1/4 -left-1/4 w-64 h-64 bg-orange-400/10 rounded-full blur-3xl floating-blob" />
-          </div>
-        </div>
-      </motion.section>
+        </motion.section>
 
       {/* 2. Problem Section */}
       <motion.section 
@@ -522,14 +529,15 @@ export default function LandingPage() {
         </div>
       </motion.section>
 
-      {/* 11. Footer */}
+      </main>
+      
       <footer className="bg-white py-20 px-6 border-t border-gray-100">
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-4 gap-12 mb-16">
             <div className="col-span-2">
               <Link href="/" className="flex items-center gap-2 mb-6">
-                <div className="w-10 h-10 bg-[#F9A11B] rounded-xl flex items-center justify-center text-white">
-                  <Zap className="w-6 h-6 fill-current" />
+                <div className="w-10 h-10 bg-[#F9A11B] rounded-xl flex items-center justify-center text-white overflow-hidden p-1.5">
+                  <img src="/logo.png" alt="NotePilot Logo" className="w-full h-full object-contain" />
                 </div>
                 <span className="text-2xl font-black tracking-tight text-[#2D6A4F]">NotePilot</span>
               </Link>

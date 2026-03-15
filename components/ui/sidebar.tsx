@@ -39,8 +39,8 @@ export function Sidebar() {
     >
       <div className="p-8">
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-12 h-12 bg-[#2D6A4F] rounded-2xl flex items-center justify-center text-white shadow-lg transform group-hover:rotate-12 transition-transform duration-300">
-            <Sparkles className="w-7 h-7 fill-current text-white" />
+          <div className="w-12 h-12 bg-[#2D6A4F] rounded-2xl flex items-center justify-center text-white shadow-lg transform group-hover:rotate-12 transition-transform duration-300 overflow-hidden">
+            <img src="/logo.png" alt="NotePilot Logo" className="w-9 h-9 object-contain" />
           </div>
           <div className="flex flex-col">
             <span className="text-2xl font-black tracking-tight text-[#1A1A1A]">NotePilot</span>
