@@ -30,6 +30,7 @@ export default function UploadPdfPage() {
   const [stage, setStage] = useState<UploadStage>("idle");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [analysisStatus, setAnalysisStatus] = useState("Initializing AI Engine...");
+  const [generatedNoteId, setGeneratedNoteId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   
   const scannerLineRef = useRef<HTMLDivElement>(null);
@@ -131,6 +132,7 @@ export default function UploadPdfPage() {
       const result = await response.json();
       
       if (result.success) {
+        setGeneratedNoteId(result.noteId);
         setStage("success");
       } else {
         const errorMsg = result.details ? `${result.error}: ${result.details}` : (result.error || "Unknown error occurred");
@@ -345,7 +347,7 @@ export default function UploadPdfPage() {
                     </div>
 
                     <div className="flex flex-col gap-4 w-full">
-                        <Link href="/dashboard/notes" className="w-full">
+                        <Link href={`/dashboard/notes?id=${generatedNoteId}`} className="w-full">
                             <Button className="w-full bg-[#2D6A4F] border-none hover:bg-black text-white rounded-2xl py-8 text-xl font-black shadow-2xl shadow-green-900/20 flex items-center justify-center gap-3">
                               View Results Now
                               <Eye className="w-6 h-6" />

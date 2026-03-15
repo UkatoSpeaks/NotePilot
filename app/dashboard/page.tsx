@@ -220,24 +220,26 @@ function NoteItem({ note }: { note: any }) {
   const dateStr = note.createdAt?.toDate ? note.createdAt.toDate().toLocaleDateString() : 'Just now';
 
   return (
-    <div className="flex items-center justify-between p-6 rounded-3xl bg-white border border-gray-100 hover:border-[#2D6A4F]/20 hover:shadow-xl hover:shadow-green-900/5 transition-all group">
-      <div className="flex items-center gap-5">
-        <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-[#2D6A4F] group-hover:bg-[#2D6A4F] group-hover:text-white transition-colors duration-300">
-          <FileText className="w-6 h-6" />
-        </div>
-        <div>
-          <p className="text-lg font-black text-gray-800">{note.topic}</p>
-          <div className="flex items-center gap-2 mt-1">
-             <span className="text-[10px] font-black text-[#F9A11B] uppercase tracking-widest px-2 py-0.5 bg-orange-50 rounded-md">{note.subject}</span>
-             <span className="text-[10px] text-gray-400 font-bold flex items-center gap-1"><Clock className="w-3 h-3" /> {dateStr}</span>
+    <Link href={`/dashboard/notes?id=${note.id}`} className="block">
+      <div className="flex items-center justify-between p-6 rounded-3xl bg-white border border-gray-100 hover:border-[#2D6A4F]/20 hover:shadow-xl hover:shadow-green-900/5 transition-all group cursor-pointer">
+        <div className="flex items-center gap-5">
+          <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-[#2D6A4F] group-hover:bg-[#2D6A4F] group-hover:text-white transition-colors duration-300">
+            <FileText className="w-6 h-6" />
+          </div>
+          <div>
+            <p className="text-lg font-black text-gray-800">{note.topic}</p>
+            <div className="flex items-center gap-2 mt-1">
+               <span className="text-[10px] font-black text-[#F9A11B] uppercase tracking-widest px-2 py-0.5 bg-orange-50 rounded-md">{note.subject}</span>
+               <span className="text-[10px] text-gray-400 font-bold flex items-center gap-1"><Clock className="w-3 h-3" /> {dateStr}</span>
+            </div>
           </div>
         </div>
+        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button variant="ghost" size="icon" className="w-10 h-10 rounded-xl text-gray-400 hover:text-[#2D6A4F] hover:bg-green-50">
+            <Eye className="w-5 h-5" />
+          </Button>
+        </div>
       </div>
-      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-        <Button variant="ghost" size="icon" className="w-10 h-10 rounded-xl text-gray-400 hover:text-[#2D6A4F] hover:bg-green-50">
-          <Eye className="w-5 h-5" />
-        </Button>
-      </div>
-    </div>
+    </Link>
   );
 }

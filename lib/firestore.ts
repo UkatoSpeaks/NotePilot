@@ -120,13 +120,39 @@ export async function getRecentNotes(userId: string, limitCount = 5) {
   
   try {
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as any[];
   } catch (error) {
     console.warn("getRecentNotes: Fetch failed, trying cache...", error);
-    // getDocs doesn't have a direct 'FromCache' version like getDoc in standard modular,
-    // but we can use the source: 'cache' option in some versions or it just works if persistence is enabled.
-    // Actually, getDocs just returns whatever it has if persistence is on and it fails.
-    // However, some versions throw. Let's try to just return empty or log.
+    return [];
+  }
+}
+
+export async function getNote(noteId: string) {
+  const noteRef = doc(db, "notes", noteId);
+  try {
+    const noteSnap = await getDoc(noteRef);
+    if (noteSnap.exists()) {
+      return { id: noteSnap.id, ...noteSnap.data() } as any;
+    }
+  } catch (error) {
+    console.error("getNote: Error fetching note", error);
+  }
+  return null;
+}
+
+export async function getAllNotes(userId: string) {
+  const notesRef = collection(db, "notes");
+  const q = query(
+    notesRef, 
+    where("userId", "==", userId), 
+    orderBy("createdAt", "desc")
+  );
+  
+  try {
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as any[];
+  } catch (error) {
+    console.error("getAllNotes: Error fetching all notes", error);
     return [];
   }
 }

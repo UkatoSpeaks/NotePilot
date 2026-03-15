@@ -107,6 +107,27 @@ export function NoteViewer({ title, subject, content }: NoteViewerProps) {
           </div>
         </motion.section>
 
+        {/* Formulas */}
+        {content.formulas && content.formulas.length > 0 && (
+          <motion.section 
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.25 }}
+          >
+            <h3 className="text-xl font-bold mb-6 flex items-center gap-3 text-secondary">
+              <div className="w-2 h-8 bg-secondary rounded-full" />
+              Important Formulas
+            </h3>
+            <div className="flex flex-wrap gap-4">
+              {content.formulas.map((item, i) => (
+                <div key={i} className="px-6 py-4 bg-gray-900 text-white rounded-2xl font-mono text-lg shadow-xl">
+                  {item}
+                </div>
+              ))}
+            </div>
+          </motion.section>
+        )}
+
         {/* Exam Questions */}
         <motion.section 
           initial={{ opacity: 0, x: -10 }}

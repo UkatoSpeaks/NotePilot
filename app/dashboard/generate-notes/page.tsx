@@ -48,21 +48,42 @@ export default function GenerateNotesPage() {
     board: ""
   });
 
+  const [generatedNote, setGeneratedNote] = useState<any>(null);
+
   const handleGenerate = async () => {
     if (!user) return;
     setIsGenerating(true);
     
-    // Simulate generation time
-    setTimeout(async () => {
-      try {
-        await saveNote(user.uid, formData.subject, formData.topic, MOCK_NOTES);
-        setIsGenerating(false);
-        setShowResult(true);
-      } catch (error) {
-        console.error("Error saving note:", error);
-        setIsGenerating(false);
+    try {
+      const response = await fetch("/api/generate-notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.uid,
+          subject: formData.subject,
+          topic: formData.topic,
+          class: formData.class,
+          board: formData.board
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate notes");
       }
-    }, 2500);
+
+      const result = await response.json();
+      if (result.success) {
+        setGeneratedNote(result.content);
+        setShowResult(true);
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      console.error("Error generating note:", error);
+      alert("Something went wrong while generating your notes.");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const reset = () => {
@@ -83,7 +104,7 @@ export default function GenerateNotesPage() {
         <NoteViewer 
           title={formData.topic} 
           subject={formData.subject} 
-          content={MOCK_NOTES} 
+          content={generatedNote} 
         />
       </div>
     );
