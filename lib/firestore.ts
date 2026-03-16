@@ -89,6 +89,7 @@ export interface NoteStructure {
   formulas?: string[];
   examples: string[];
   examQuestions: { question: string, answer: string }[] | string[];
+  flashcards?: { question: string, answer: string }[];
 }
 
 export async function saveNote(userId: string, subject: string, topic: string, content: NoteStructure | string) {

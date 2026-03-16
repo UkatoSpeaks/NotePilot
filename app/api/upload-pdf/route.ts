@@ -45,6 +45,9 @@ export async function POST(req: NextRequest) {
         "examples": ["Illustration from text", ...],
         "examQuestions": [
           { "question": "Likely question based on this PDF", "answer": "Detailed model answer" }
+        ],
+        "flashcards": [
+          { "question": "Concept Question?", "answer": "Concise Answer" }
         ]
       }
       
@@ -52,6 +55,10 @@ export async function POST(req: NextRequest) {
       Please generate 10 high-quality practice questions and answers.
       - For each question, provide a detailed "answer".
       - Ensure questions cover the most important concepts from the text.
+
+      Requirements for Flashcards:
+      Please generate 10 high-quality flashcards. 
+      - Keep the front (question) and back (answer) very concise for quick revision.
     `;
 
     const result = await model.generateContent(prompt);

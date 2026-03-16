@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Copy, Download, Share2, Sparkles, Bookmark, Check, Share } from "lucide-react";
+import { Copy, Download, Share2, Sparkles, Bookmark, Check, Share, ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "./button";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
@@ -18,6 +18,11 @@ interface NoteViewerProps {
 export function NoteViewer({ title, subject, content }: NoteViewerProps) {
   const [isCopied, setIsCopied] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [viewMode, setViewMode] = useState<"notes" | "flashcards">("notes");
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [isFlipped, setIsFlipped] = useState(false);
+
+  const flashcards = content.flashcards || [];
 
   const handleCopy = async () => {
     const text = `
@@ -66,6 +71,20 @@ ${content.examQuestions.map((q: any, i: number) => {
     window.print();
   };
 
+  const nextCard = () => {
+    setIsFlipped(false);
+    setTimeout(() => {
+        setCurrentCardIndex((prev) => (prev + 1) % flashcards.length);
+    }, 150);
+  };
+
+  const prevCard = () => {
+    setIsFlipped(false);
+    setTimeout(() => {
+        setCurrentCardIndex((prev) => (prev - 1 + flashcards.length) % flashcards.length);
+    }, 150);
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -77,6 +96,18 @@ ${content.examQuestions.map((q: any, i: number) => {
           .no-print { display: none !important; }
           body { background: white !important; padding: 0 !important; }
           .print-container { padding: 0 !important; margin: 0 !important; }
+        }
+        .perspective-1000 {
+           perspective: 1000px;
+        }
+        .transform-style-3d {
+           transform-style: preserve-3d;
+        }
+        .backface-hidden {
+           backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+           transform: rotateY(180deg);
         }
       `}</style>
       
@@ -131,136 +162,227 @@ ${content.examQuestions.map((q: any, i: number) => {
           </div>
       </div>
 
-      <div className="p-8 md:p-12 space-y-12 max-w-4xl mx-auto">
-        {/* Definition Section */}
-        <motion.section 
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-        >
-          <h3 className="text-xl font-bold mb-6 flex items-center gap-3 text-primary">
-            <div className="w-2 h-8 bg-primary rounded-full" />
-            Core Definition
-          </h3>
-          <div className="p-6 rounded-3xl bg-primary/5 border border-primary/10">
-            <p className="text-secondary leading-relaxed font-bold text-lg italic">
-              "{content.definition}"
-            </p>
-          </div>
-        </motion.section>
-
-        {/* Key Concepts */}
-        <motion.section 
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <h3 className="text-xl font-bold mb-6 flex items-center gap-3 text-primary">
-            <div className="w-2 h-8 bg-primary rounded-full" />
-            Key Concepts
-          </h3>
-          <ul className="space-y-4">
-            {content.keyConcepts.map((item, i) => (
-              <li key={i} className="flex gap-4 group">
-                <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-primary/20 transition-colors">
-                  <div className="w-1.5 h-1.5 rounded-full bg-secondary group-hover:bg-primary transition-colors" />
-                </div>
-                <p className="text-secondary leading-relaxed font-medium">
-                  {item}
-                </p>
-              </li>
-            ))}
-          </ul>
-        </motion.section>
-
-        {/* Examples */}
-        <motion.section 
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <h3 className="text-xl font-bold mb-6 flex items-center gap-3 text-orange-500">
-            <div className="w-2 h-8 bg-orange-500 rounded-full" />
-            Real-world Examples
-          </h3>
-          <div className="grid md:grid-cols-2 gap-4">
-            {content.examples.map((item, i) => (
-              <div key={i} className="p-5 rounded-2xl bg-orange-50 border border-orange-100 font-bold text-orange-800 text-sm">
-                • {item}
-              </div>
-            ))}
-          </div>
-        </motion.section>
-
-        {/* Formulas */}
-        {content.formulas && content.formulas.length > 0 && (
-          <motion.section 
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.25 }}
+      {/* Tabs / Mode Selector */}
+      <div className="no-print border-b border-border flex p-1 bg-muted/20 mx-12 mt-8 rounded-2xl">
+          <button 
+            onClick={() => setViewMode("notes")}
+            className={cn(
+                "flex-1 py-3 rounded-xl font-bold text-sm transition-all",
+                viewMode === "notes" ? "bg-white shadow-sm text-primary" : "text-secondary hover:text-primary"
+            )}
           >
-            <h3 className="text-xl font-bold mb-6 flex items-center gap-3 text-secondary">
-              <div className="w-2 h-8 bg-secondary rounded-full" />
-              Important Formulas
-            </h3>
-            <div className="flex flex-wrap gap-4">
-              {content.formulas.map((item, i) => (
-                <div key={i} className="px-6 py-4 bg-gray-900 text-white rounded-2xl font-mono text-lg shadow-xl">
-                  {item}
-                </div>
-              ))}
-            </div>
-          </motion.section>
-        )}
+              Study Notes
+          </button>
+          <button 
+            onClick={() => setViewMode("flashcards")}
+            className={cn(
+                "flex-1 py-3 rounded-xl font-bold text-sm transition-all",
+                viewMode === "flashcards" ? "bg-white shadow-sm text-primary" : "text-secondary hover:text-primary"
+            )}
+          >
+              Revision Flashcards
+          </button>
+      </div>
 
-        {/* Exam Questions */}
-        <motion.section 
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <h3 className="text-xl font-bold mb-6 flex items-center gap-3 text-red-500">
-            <div className="w-2 h-8 bg-red-500 rounded-full" />
-            Exam Practice Questions
-          </h3>
-          <div className="space-y-4">
-            {content.examQuestions.map((item, i) => {
-              const q = typeof item === 'string' ? item : item.question;
-              const a = typeof item === 'string' ? null : item.answer;
-              
-              return (
-                <div key={i} className="flex flex-col gap-2">
-                  <div className="p-4 rounded-xl bg-red-50 font-bold text-red-700 flex items-center gap-3">
-                    <span className="w-6 h-6 rounded-lg bg-red-100 flex items-center justify-center text-[10px] shrink-0 font-black">Q{i+1}</span>
-                    {q}
-                  </div>
-                  {a && (
-                    <div className="ml-9 p-4 rounded-xl bg-orange-50/50 border border-orange-100 font-bold text-orange-800 text-sm italic">
-                      <span className="text-[10px] uppercase tracking-widest text-orange-500 block mb-1">Model Answer</span>
-                      {a}
+      <AnimatePresence mode="wait">
+        {viewMode === "notes" ? (
+          <motion.div 
+            key="notes-content"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="p-8 md:p-12 space-y-12 max-w-4xl mx-auto"
+          >
+            {/* Definition Section */}
+            <section>
+              <h3 className="text-xl font-bold mb-6 flex items-center gap-3 text-primary">
+                <div className="w-2 h-8 bg-primary rounded-full" />
+                Core Definition
+              </h3>
+              <div className="p-6 rounded-3xl bg-primary/5 border border-primary/10">
+                <p className="text-secondary leading-relaxed font-bold text-lg italic">
+                  "{content.definition}"
+                </p>
+              </div>
+            </section>
+
+            {/* Key Concepts */}
+            <section>
+              <h3 className="text-xl font-bold mb-6 flex items-center gap-3 text-primary">
+                <div className="w-2 h-8 bg-primary rounded-full" />
+                Key Concepts
+              </h3>
+              <ul className="space-y-4">
+                {content.keyConcepts.map((item, i) => (
+                  <li key={i} className="flex gap-4 group">
+                    <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-primary/20 transition-colors">
+                      <div className="w-1.5 h-1.5 rounded-full bg-secondary group-hover:bg-primary transition-colors" />
                     </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </motion.section>
-      </div>
+                    <p className="text-secondary leading-relaxed font-medium">
+                      {item}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </section>
 
-      <div className="p-8 bg-muted/50 border-t border-border mt-12 no-print">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 rounded-3xl bg-white p-6 border border-primary/10">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
-              <Sparkles className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="font-bold">Summary Flashcards are ready!</p>
-              <p className="text-sm text-secondary">We also created 12 flashcards based on these notes.</p>
-            </div>
-          </div>
-          <Button className="rounded-2xl font-bold">Review Cards</Button>
-        </div>
-      </div>
+            {/* Examples */}
+            <section>
+              <h3 className="text-xl font-bold mb-6 flex items-center gap-3 text-orange-500">
+                <div className="w-2 h-8 bg-orange-500 rounded-full" />
+                Real-world Examples
+              </h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                {content.examples.map((item, i) => (
+                  <div key={i} className="p-5 rounded-2xl bg-orange-50 border border-orange-100 font-bold text-orange-800 text-sm">
+                    • {item}
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Formulas */}
+            {content.formulas && content.formulas.length > 0 && (
+              <section>
+                <h3 className="text-xl font-bold mb-6 flex items-center gap-3 text-secondary">
+                  <div className="w-2 h-8 bg-secondary rounded-full" />
+                  Important Formulas
+                </h3>
+                <div className="flex flex-wrap gap-4">
+                  {content.formulas.map((item, i) => (
+                    <div key={i} className="px-6 py-4 bg-gray-900 text-white rounded-2xl font-mono text-lg shadow-xl">
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Exam Questions */}
+            <section>
+              <h3 className="text-xl font-bold mb-6 flex items-center gap-3 text-red-500">
+                <div className="w-2 h-8 bg-red-500 rounded-full" />
+                Exam Practice Questions
+              </h3>
+              <div className="space-y-4">
+                {content.examQuestions.map((item, i) => {
+                  const q = typeof item === 'string' ? item : item.question;
+                  const a = typeof item === 'string' ? null : item.answer;
+                  
+                  return (
+                    <div key={i} className="flex flex-col gap-2">
+                      <div className="p-4 rounded-xl bg-red-50 font-bold text-red-700 flex items-center gap-3">
+                        <span className="w-6 h-6 rounded-lg bg-red-100 flex items-center justify-center text-[10px] shrink-0 font-black">Q{i+1}</span>
+                        {q}
+                      </div>
+                      {a && (
+                        <div className="ml-9 p-4 rounded-xl bg-orange-50/50 border border-orange-100 font-bold text-orange-800 text-sm italic">
+                          <span className="text-[10px] uppercase tracking-widest text-orange-500 block mb-1">Model Answer</span>
+                          {a}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+
+            {/* Bottom Promo */}
+            {flashcards.length > 0 && (
+                <div className="p-8 bg-muted/50 border-t border-border mt-12 no-print rounded-3xl">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-6 rounded-2xl bg-white p-6 border border-primary/10">
+                        <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                            <Sparkles className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <p className="font-bold">Summary Flashcards are ready!</p>
+                            <p className="text-sm text-secondary">We've created {flashcards.length} revision cards based on these notes.</p>
+                        </div>
+                        </div>
+                        <Button 
+                            onClick={() => setViewMode("flashcards")}
+                            className="rounded-2xl font-bold px-8 py-6 h-auto bg-primary hover:bg-black transition-all"
+                        >
+                            Review Cards Now
+                        </Button>
+                    </div>
+                </div>
+            )}
+          </motion.div>
+        ) : (
+          <motion.div 
+            key="flashcards-content"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="p-8 md:p-12 flex flex-col items-center justify-center min-h-[500px]"
+          >
+            {flashcards.length > 0 ? (
+                <div className="w-full max-w-md space-y-12">
+                     <div className="flex justify-between items-center px-4">
+                        <p className="text-secondary font-black uppercase tracking-widest text-xs">Card {currentCardIndex + 1} of {flashcards.length}</p>
+                        <div className="flex gap-1">
+                             {flashcards.map((_, i) => (
+                                <div key={i} className={cn("w-2 h-2 rounded-full", i === currentCardIndex ? "bg-primary" : "bg-muted")} />
+                             ))}
+                        </div>
+                     </div>
+
+                     {/* Flashcard Component */}
+                     <div className="perspective-1000 w-full h-80 cursor-pointer" onClick={() => setIsFlipped(!isFlipped)}>
+                        <motion.div 
+                            className="w-full h-full relative transition-all duration-500 transform-style-3d shadow-xl rounded-[40px]"
+                            animate={{ rotateY: isFlipped ? 180 : 0 }}
+                            transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                        >
+                            {/* Front */}
+                            <div className="absolute inset-0 backface-hidden bg-white border-2 border-primary/10 rounded-[40px] p-10 flex flex-col items-center justify-center text-center">
+                                <p className="text-secondary/40 font-black text-[10px] uppercase tracking-[0.2em] mb-6">Question</p>
+                                <h4 className="text-2xl font-black text-gray-900 leading-tight">
+                                    {flashcards[currentCardIndex].question}
+                                </h4>
+                                <p className="mt-8 text-primary font-bold text-xs uppercase tracking-widest flex items-center gap-2">
+                                    Click to reveal <Check className="w-3 h-3" />
+                                </p>
+                            </div>
+
+                            {/* Back */}
+                            <div className="absolute inset-0 backface-hidden rotate-y-180 bg-primary rounded-[40px] p-10 flex flex-col items-center justify-center text-center">
+                                <p className="text-white/40 font-black text-[10px] uppercase tracking-[0.2em] mb-6">Answer</p>
+                                <h4 className="text-2xl font-black text-white leading-tight">
+                                    {flashcards[currentCardIndex].answer}
+                                </h4>
+                                <p className="mt-8 text-white/60 font-medium text-xs">Click to flip back</p>
+                            </div>
+                        </motion.div>
+                     </div>
+
+                     <div className="flex items-center justify-center gap-6 no-print">
+                        <Button 
+                            variant="outline" 
+                            onClick={prevCard}
+                            className="w-16 h-16 rounded-full border-2 border-primary/20 hover:bg-primary/5 transition-all text-primary"
+                        >
+                            <ArrowLeft className="w-6 h-6" />
+                        </Button>
+                        <Button 
+                            onClick={nextCard}
+                            className="w-16 h-16 rounded-full bg-primary hover:bg-black shadow-xl shadow-primary/20 text-white transition-all transform hover:scale-110 active:scale-95"
+                        >
+                            <ArrowRight className="w-6 h-6" />
+                        </Button>
+                     </div>
+                </div>
+            ) : (
+                <div className="text-center space-y-6">
+                    <p className="font-bold text-secondary">No flashcards found for these notes.</p>
+                    <Button onClick={() => setViewMode("notes")} variant="outline" className="rounded-2xl">Go back to Notes</Button>
+                </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
-

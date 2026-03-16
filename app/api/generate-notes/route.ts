@@ -36,10 +36,17 @@ export async function POST(req: NextRequest) {
         "formulas": ["Optional Formula 1", ...],
         "examples": ["Real-world example 1", ...],
         "examQuestions": [
-          { "question": "The question text", "answer": "The model answer" },
-          ...
+          { "question": "The question text", "answer": "The model answer" }
+        ],
+        "flashcards": [
+          { "question": "Concise Question?", "answer": "Quick Answer" }
         ]
       }
+
+      Requirements for Flashcards:
+      Please generate 10 high-quality flashcards.
+      - Each card should have a "question" and an "answer".
+      - Keep them focused on quick recall of facts/definitions.
     `;
 
     // 3. Generate AI Content
