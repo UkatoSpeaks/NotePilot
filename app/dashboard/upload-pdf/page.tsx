@@ -345,7 +345,7 @@ export default function UploadPdfPage() {
                       <FileCheck className="w-16 h-16" />
                     </div>
                     <h3 className="text-4xl font-black text-gray-900 mb-4">Study Guide Ready!</h3>
-                    <p className="text-gray-500 font-bold mb-4 leading-relaxed">We've extracted 12 key points, 8 flashcards, and 5 practice questions from your document.</p>
+                    <p className="text-gray-500 font-bold mb-4 leading-relaxed">We've extracted 12 key points, 8 flashcards, and 10 practice questions from your document.</p>
                     <p className="text-[#F9A11B] font-black text-xs uppercase tracking-[0.2em] mb-10 animate-pulse">Redirecting to Notes in 3s...</p>
                     
                     <div className="grid grid-cols-2 gap-4 w-full mb-10">

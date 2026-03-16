@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
       Topic: ${topic}
       
       Requirements for Practice Questions:
-      Please generate 5 questions specifically of type: ${questionType}.
+      Please generate 10 questions specifically of type: ${questionType}.
       For each question, also provide an "answer" that follows the ${questionType} format.
       - MCQs: Include options in the question text and the correct answer in the answer field.
       - Short/Long: Provide a concise or detailed model answer as appropriate.

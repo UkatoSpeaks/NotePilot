@@ -47,6 +47,11 @@ export async function POST(req: NextRequest) {
           { "question": "Likely question based on this PDF", "answer": "Detailed model answer" }
         ]
       }
+      
+      Requirements for Practice Questions:
+      Please generate 10 high-quality practice questions and answers.
+      - For each question, provide a detailed "answer".
+      - Ensure questions cover the most important concepts from the text.
     `;
 
     const result = await model.generateContent(prompt);
