@@ -93,14 +93,14 @@ function NotesContent() {
       </header>
 
       {notes.length === 0 ? (
-        <div className="bg-white rounded-[48px] border-4 border-dashed border-gray-100 p-20 text-center flex flex-col items-center">
-           <div className="w-24 h-24 bg-gray-50 rounded-[32px] flex items-center justify-center mb-8 text-gray-200">
-              <FileText className="w-12 h-12" />
+        <div className="bg-white rounded-4xl border-4 border-dashed border-gray-100 p-12 text-center flex flex-col items-center">
+           <div className="w-20 h-20 bg-gray-50 rounded-2xl flex items-center justify-center mb-6 text-gray-200">
+              <FileText className="w-10 h-10" />
            </div>
-           <h3 className="text-3xl font-black text-gray-900 mb-3">Your library is empty</h3>
-           <p className="text-gray-400 font-bold mb-10 max-w-sm leading-relaxed text-lg">You haven't generated any notes yet. Turn your textbooks into smart study guides in seconds.</p>
+           <h3 className="text-2xl font-black text-gray-900 mb-2">Your library is empty</h3>
+           <p className="text-gray-400 font-bold mb-8 max-w-sm leading-relaxed text-base">You haven't generated any notes yet. Turn your textbooks into smart study guides in seconds.</p>
            <Link href="/dashboard/upload-pdf">
-             <Button size="lg" className="rounded-2xl font-black bg-[#2D6A4F] hover:bg-black px-10 py-8 text-lg transition-all shadow-2xl shadow-green-900/20">
+             <Button className="rounded-xl font-black bg-[#2D6A4F] hover:bg-black px-8 py-6 h-auto text-base transition-all shadow-2xl shadow-green-900/20">
                 Get Started Now
              </Button>
            </Link>
@@ -126,20 +126,20 @@ function NoteCard({ note }: { note: any }) {
   return (
     <Link href={`?id=${note.id}`}>
       <motion.div 
-        whileHover={{ y: -8, scale: 1.02 }}
+        whileHover={{ y: -6, scale: 1.01 }}
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
-        className="p-10 rounded-[48px] bg-white border border-gray-100 hover:border-[#2D6A4F]/30 transition-all cursor-pointer group hover:shadow-2xl hover:shadow-green-900/5 ring-1 ring-gray-50 h-full flex flex-col"
+        className="p-8 rounded-3xl bg-white border border-gray-100 hover:border-[#2D6A4F]/30 transition-all cursor-pointer group hover:shadow-2xl hover:shadow-green-900/5 ring-1 ring-gray-50 h-full flex flex-col"
       >
-        <div className="w-16 h-16 rounded-[24px] bg-[#2D6A4F]/5 flex items-center justify-center text-[#2D6A4F] group-hover:bg-[#2D6A4F] group-hover:text-white transition-all mb-10 shadow-inner">
-           <FileText className="w-8 h-8" />
+        <div className="w-14 h-14 rounded-2xl bg-[#2D6A4F]/5 flex items-center justify-center text-[#2D6A4F] group-hover:bg-[#2D6A4F] group-hover:text-white transition-all mb-8 shadow-inner">
+           <FileText className="w-7 h-7" />
         </div>
-        <h4 className="text-2xl font-black text-gray-900 mb-3 truncate w-full">{note.topic}</h4>
-        <div className="flex items-center gap-3 mb-10 flex-wrap">
+        <h4 className="text-xl font-black text-gray-900 mb-2 truncate w-full">{note.topic}</h4>
+        <div className="flex items-center gap-3 mb-8 flex-wrap">
            <span className="px-3 py-1 rounded-full bg-orange-50 text-orange-600 text-[10px] font-black uppercase tracking-widest border border-orange-100">{note.subject}</span>
            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em]">{dateStr}</span>
         </div>
-        <div className="mt-auto flex items-center text-[#2D6A4F] font-black text-xs uppercase tracking-widest gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-           Open Library <ArrowRight className="w-4 h-4 translate-x-0 group-hover:translate-x-1 transition-transform" />
+        <div className="mt-auto flex items-center text-[#2D6A4F] font-black text-[10px] uppercase tracking-widest gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+           Open Library <ArrowRight className="w-3 h-3 translate-x-0 group-hover:translate-x-1 transition-transform" />
         </div>
       </motion.div>
     </Link>

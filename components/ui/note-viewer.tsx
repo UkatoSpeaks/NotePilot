@@ -89,7 +89,7 @@ ${content.examQuestions.map((q: any, i: number) => {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-[2.5rem] border border-border overflow-hidden shadow-2xl shadow-primary/5 print:shadow-none print:border-none print:rounded-none"
+      className="bg-white rounded-4xl border border-border overflow-hidden shadow-2xl shadow-primary/5 print:shadow-none print:border-none print:rounded-none"
     >
       <style jsx global>{`
         @media print {
@@ -111,7 +111,7 @@ ${content.examQuestions.map((q: any, i: number) => {
         }
       `}</style>
       
-      <div className="p-8 md:p-12 border-b border-dashed border-border flex flex-col md:flex-row md:items-center justify-between gap-6 bg-linear-to-br from-white to-muted/30 no-print">
+      <div className="p-6 md:p-10 border-b border-dashed border-border flex flex-col md:flex-row md:items-center justify-between gap-6 bg-linear-to-br from-white to-muted/30 no-print">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <span className="px-3 py-1 bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest rounded-full">{subject}</span>
@@ -119,7 +119,7 @@ ${content.examQuestions.map((q: any, i: number) => {
               <Sparkles className="w-3 h-3" /> AI Generated
             </div>
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">{title}</h2>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{title}</h2>
         </div>
         
         <div className="flex items-center gap-3">
@@ -127,7 +127,7 @@ ${content.examQuestions.map((q: any, i: number) => {
             variant="outline" 
             size="icon" 
             onClick={handleCopy}
-            className={cn("rounded-2xl transition-all", isCopied && "bg-green-50 border-green-200 text-green-600")}
+            className={cn("rounded-xl transition-all", isCopied && "bg-green-50 border-green-200 text-green-600")}
           >
             {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
           </Button>
@@ -135,14 +135,14 @@ ${content.examQuestions.map((q: any, i: number) => {
             variant="outline" 
             size="icon" 
             onClick={() => setIsBookmarked(!isBookmarked)}
-            className={cn("rounded-2xl transition-all", isBookmarked && "bg-amber-50 border-amber-200 text-amber-600")}
+            className={cn("rounded-xl transition-all", isBookmarked && "bg-amber-50 border-amber-200 text-amber-600")}
           >
             <Bookmark className={cn("w-4 h-4", isBookmarked && "fill-current")} />
           </Button>
-          <Button variant="outline" size="icon" onClick={handleShare} className="rounded-2xl">
+          <Button variant="outline" size="icon" onClick={handleShare} className="rounded-xl">
             <Share2 className="w-4 h-4" />
           </Button>
-          <Button onClick={handlePrint} className="rounded-2xl gap-3 font-bold px-6">
+          <Button onClick={handlePrint} className="rounded-xl gap-3 font-bold px-5 h-11 text-sm">
             <Download className="w-4 h-4" /> Export PDF
           </Button>
         </div>
@@ -199,8 +199,8 @@ ${content.examQuestions.map((q: any, i: number) => {
                 <div className="w-2 h-8 bg-primary rounded-full" />
                 Core Definition
               </h3>
-              <div className="p-6 rounded-3xl bg-primary/5 border border-primary/10">
-                <p className="text-secondary leading-relaxed font-bold text-lg italic">
+              <div className="p-5 rounded-2xl bg-primary/5 border border-primary/10">
+                <p className="text-secondary leading-relaxed font-bold text-base italic">
                   "{content.definition}"
                 </p>
               </div>
@@ -273,20 +273,20 @@ ${content.examQuestions.map((q: any, i: number) => {
 
             {/* Bottom Promo */}
             {flashcards.length > 0 && (
-                <div className="p-8 bg-muted/50 border-t border-border mt-12 no-print rounded-3xl">
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-6 rounded-2xl bg-white p-6 border border-primary/10">
+                <div className="p-6 bg-muted/50 border-t border-border mt-10 no-print rounded-3xl">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-6 rounded-2xl bg-white p-5 border border-primary/10">
                         <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
-                            <Sparkles className="w-6 h-6" />
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                            <Sparkles className="w-5 h-5" />
                         </div>
                         <div>
-                            <p className="font-bold">Summary Flashcards are ready!</p>
-                            <p className="text-sm text-secondary">We've created {flashcards.length} revision cards based on these notes.</p>
+                            <p className="font-bold text-sm">Summary Flashcards are ready!</p>
+                            <p className="text-xs text-secondary">We've created {flashcards.length} revision cards based on these notes.</p>
                         </div>
                         </div>
                         <Button 
                             onClick={() => setViewMode("flashcards")}
-                            className="rounded-2xl font-bold px-8 py-6 h-auto bg-primary hover:bg-black transition-all"
+                            className="rounded-xl font-bold px-6 py-4 h-auto bg-primary hover:bg-black transition-all text-xs"
                         >
                             Review Cards Now
                         </Button>
@@ -314,47 +314,47 @@ ${content.examQuestions.map((q: any, i: number) => {
                      </div>
 
                      {/* Flashcard Component */}
-                     <div className="perspective-1000 w-full h-80 cursor-pointer" onClick={() => setIsFlipped(!isFlipped)}>
+                     <div className="perspective-1000 w-full h-64 cursor-pointer" onClick={() => setIsFlipped(!isFlipped)}>
                         <motion.div 
-                            className="w-full h-full relative transition-all duration-500 transform-style-3d shadow-xl rounded-[40px]"
+                            className="w-full h-full relative transition-all duration-500 transform-style-3d shadow-xl rounded-2xl"
                             animate={{ rotateY: isFlipped ? 180 : 0 }}
                             transition={{ type: "spring", stiffness: 260, damping: 20 }}
                         >
                             {/* Front */}
-                            <div className="absolute inset-0 backface-hidden bg-white border-2 border-primary/10 rounded-[40px] p-10 flex flex-col items-center justify-center text-center">
-                                <p className="text-secondary/40 font-black text-[10px] uppercase tracking-[0.2em] mb-6">Question</p>
-                                <h4 className="text-2xl font-black text-gray-900 leading-tight">
+                            <div className="absolute inset-0 backface-hidden bg-white border-2 border-primary/10 rounded-2xl p-8 flex flex-col items-center justify-center text-center">
+                                <p className="text-secondary/40 font-black text-[10px] uppercase tracking-[0.2em] mb-4">Question</p>
+                                <h4 className="text-xl font-black text-gray-900 leading-tight">
                                     {flashcards[currentCardIndex].question}
                                 </h4>
-                                <p className="mt-8 text-primary font-bold text-xs uppercase tracking-widest flex items-center gap-2">
+                                <p className="mt-6 text-primary font-bold text-[10px] uppercase tracking-widest flex items-center gap-2">
                                     Click to reveal <Check className="w-3 h-3" />
                                 </p>
                             </div>
 
                             {/* Back */}
-                            <div className="absolute inset-0 backface-hidden rotate-y-180 bg-primary rounded-[40px] p-10 flex flex-col items-center justify-center text-center">
-                                <p className="text-white/40 font-black text-[10px] uppercase tracking-[0.2em] mb-6">Answer</p>
-                                <h4 className="text-2xl font-black text-white leading-tight">
+                            <div className="absolute inset-0 backface-hidden rotate-y-180 bg-primary rounded-2xl p-8 flex flex-col items-center justify-center text-center">
+                                <p className="text-white/40 font-black text-[10px] uppercase tracking-[0.2em] mb-4">Answer</p>
+                                <h4 className="text-xl font-black text-white leading-tight">
                                     {flashcards[currentCardIndex].answer}
                                 </h4>
-                                <p className="mt-8 text-white/60 font-medium text-xs">Click to flip back</p>
+                                <p className="mt-6 text-white/60 font-medium text-[10px]">Click to flip back</p>
                             </div>
                         </motion.div>
                      </div>
 
-                     <div className="flex items-center justify-center gap-6 no-print">
+                     <div className="flex items-center justify-center gap-5 no-print">
                         <Button 
                             variant="outline" 
                             onClick={prevCard}
-                            className="w-16 h-16 rounded-full border-2 border-primary/20 hover:bg-primary/5 transition-all text-primary"
+                            className="w-12 h-12 rounded-full border-2 border-primary/20 hover:bg-primary/5 transition-all text-primary"
                         >
-                            <ArrowLeft className="w-6 h-6" />
+                            <ArrowLeft className="w-4 h-4" />
                         </Button>
                         <Button 
                             onClick={nextCard}
-                            className="w-16 h-16 rounded-full bg-primary hover:bg-black shadow-xl shadow-primary/20 text-white transition-all transform hover:scale-110 active:scale-95"
+                            className="w-12 h-12 rounded-full bg-primary hover:bg-black shadow-xl shadow-primary/20 text-white transition-all transform hover:scale-110 active:scale-95"
                         >
-                            <ArrowRight className="w-6 h-6" />
+                            <ArrowRight className="w-4 h-4" />
                         </Button>
                      </div>
                 </div>
