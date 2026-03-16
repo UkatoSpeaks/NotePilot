@@ -54,6 +54,8 @@ export async function POST(req: NextRequest) {
       Requirements for Practice Questions:
       Please generate 10 high-quality practice questions and answers.
       - For each question, provide a detailed "answer".
+      - Ensure the answer is mid-length (not too long, not too short).
+      - Make sure the concepts in the answer are explained crystal clear for a student.
       - Ensure questions cover the most important concepts from the text.
 
       Requirements for Flashcards:

@@ -17,7 +17,9 @@ import {
   Trophy,
   Timer,
   Pause,
-  Play
+  Play,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -66,7 +68,10 @@ export default function RevisionPage() {
         points: [
           n.content.definition,
           ...(n.content.keyConcepts || [])
-        ]
+        ],
+        questions: (n.content.examQuestions || []).map((q: any) => 
+          typeof q === 'string' ? { question: q, answer: null } : q
+        )
       }));
   }, [notes, selectedTopics]);
 
@@ -330,6 +335,15 @@ export default function RevisionPage() {
                             </motion.div>
                           ))}
                        </div>
+
+                       {activeCards[currentCardIndex].questions && activeCards[currentCardIndex].questions.length > 0 && (
+                           <div className="pt-12 mt-12 border-t border-dashed border-gray-100 space-y-8">
+                               <h4 className="text-xs font-black text-red-500 uppercase tracking-[0.3em] mb-4">Practice Quiz</h4>
+                               {activeCards[currentCardIndex].questions.map((q: any, i: number) => (
+                                   <RevisionQuestionItem key={i} question={q.question} answer={q.answer} />
+                               ))}
+                           </div>
+                       )}
                     </div>
                   </motion.div>
                 </AnimatePresence>
@@ -446,6 +460,49 @@ function StatItem({ label, value, color }: { label: string, value: string, color
         <div className="bg-white p-8 rounded-4xl border border-gray-100 flex flex-col items-center text-center shadow-sm hover:shadow-xl transition-all">
             <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2">{label}</p>
             <p className={cn("text-4xl font-black", color)}>{value}</p>
+        </div>
+    );
+}
+
+function RevisionQuestionItem({ question, answer }: { question: string, answer: string | null }) {
+    const [isOpen, setIsOpen] = useState(false);
+
+    return (
+        <div className="space-y-4">
+            <div className="p-6 rounded-3xl bg-gray-50 border border-transparent hover:border-red-100 transition-all group">
+                <p className="text-lg font-bold text-gray-900 mb-4">{question}</p>
+                {answer && (
+                    <Button 
+                        onClick={() => setIsOpen(!isOpen)}
+                        variant="ghost"
+                        className={cn(
+                            "rounded-xl h-10 px-4 text-xs font-black uppercase tracking-widest gap-2",
+                            isOpen ? "bg-red-50 text-red-600" : "bg-white shadow-sm text-gray-400 hover:text-red-500"
+                        )}
+                    >
+                        {isOpen ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {isOpen ? "Hide Explanation" : "Reveal Answer"}
+                    </Button>
+                )}
+            </div>
+            
+            <AnimatePresence>
+                {isOpen && answer && (
+                    <motion.div 
+                        initial={{ opacity: 0, height: 0, y: -10 }}
+                        animate={{ opacity: 1, height: "auto", y: 0 }}
+                        exit={{ opacity: 0, height: 0, y: -10 }}
+                        className="overflow-hidden"
+                    >
+                        <div className="ml-6 p-6 rounded-3xl bg-orange-50 border-2 border-orange-100 shadow-xl shadow-orange-900/5">
+                            <span className="text-[10px] font-black text-orange-500 uppercase tracking-widest block mb-2">Crystal Clear Explanation</span>
+                            <p className="text-orange-900 font-bold leading-relaxed italic cursor-default">
+                                {answer}
+                            </p>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

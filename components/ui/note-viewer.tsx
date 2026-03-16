@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Copy, Download, Share2, Sparkles, Bookmark, Check, Share, ArrowLeft, ArrowRight } from "lucide-react";
+import { Copy, Download, Share2, Sparkles, Bookmark, Check, Share, ArrowLeft, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { Button } from "./button";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
@@ -264,26 +264,10 @@ ${content.examQuestions.map((q: any, i: number) => {
                 <div className="w-2 h-8 bg-red-500 rounded-full" />
                 Exam Practice Questions
               </h3>
-              <div className="space-y-4">
-                {content.examQuestions.map((item, i) => {
-                  const q = typeof item === 'string' ? item : item.question;
-                  const a = typeof item === 'string' ? null : item.answer;
-                  
-                  return (
-                    <div key={i} className="flex flex-col gap-2">
-                      <div className="p-4 rounded-xl bg-red-50 font-bold text-red-700 flex items-center gap-3">
-                        <span className="w-6 h-6 rounded-lg bg-red-100 flex items-center justify-center text-[10px] shrink-0 font-black">Q{i+1}</span>
-                        {q}
-                      </div>
-                      {a && (
-                        <div className="ml-9 p-4 rounded-xl bg-orange-50/50 border border-orange-100 font-bold text-orange-800 text-sm italic">
-                          <span className="text-[10px] uppercase tracking-widest text-orange-500 block mb-1">Model Answer</span>
-                          {a}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+              <div className="space-y-6">
+                {content.examQuestions.map((item, i) => (
+                  <QuestionItem key={i} index={i} item={item} />
+                ))}
               </div>
             </section>
 
@@ -385,4 +369,60 @@ ${content.examQuestions.map((q: any, i: number) => {
       </AnimatePresence>
     </motion.div>
   );
+}
+
+function QuestionItem({ index, item }: { index: number, item: any }) {
+    const [showAnswer, setShowAnswer] = useState(false);
+    const q = typeof item === 'string' ? item : item.question;
+    const a = typeof item === 'string' ? null : item.answer;
+
+    return (
+        <div className="flex flex-col gap-3 group">
+            <div className="p-5 rounded-2xl bg-red-50/50 border border-red-100/50 font-bold text-red-900 flex items-start gap-4 transition-all group-hover:bg-red-50 group-hover:border-red-200">
+                <span className="w-8 h-8 rounded-xl bg-red-100 flex items-center justify-center text-xs shrink-0 font-black text-red-600 shadow-sm">Q{index + 1}</span>
+                <div className="flex-1 space-y-4">
+                    <p className="text-lg leading-relaxed">{q}</p>
+                    
+                    {a && (
+                        <button 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setShowAnswer(!showAnswer);
+                            }}
+                            className={cn(
+                                "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
+                                showAnswer 
+                                    ? "bg-gray-900 text-white shadow-lg" 
+                                    : "bg-white text-red-600 border-2 border-red-100 hover:border-red-200 shadow-sm"
+                            )}
+                        >
+                            {showAnswer ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                            {showAnswer ? "Hide Answer" : "Show Model Answer"}
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            <AnimatePresence>
+                {showAnswer && a && (
+                    <motion.div 
+                        initial={{ opacity: 0, height: 0, y: -10 }}
+                        animate={{ opacity: 1, height: "auto", y: 0 }}
+                        exit={{ opacity: 0, height: 0, y: -10 }}
+                        className="overflow-hidden"
+                    >
+                        <div className="ml-12 p-6 rounded-2xl bg-orange-50 border-2 border-orange-100 shadow-xl shadow-orange-900/5 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-3 opacity-10">
+                                <Sparkles className="w-12 h-12 text-orange-500" />
+                            </div>
+                            <span className="text-[10px] uppercase font-black tracking-[0.2em] text-orange-500 block mb-3">Crystal Clear Explanation</span>
+                            <p className="text-orange-900 font-bold leading-relaxed text-sm">
+                                {a}
+                            </p>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
 }
