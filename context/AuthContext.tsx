@@ -29,11 +29,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
       if (user) {
+        // Set a cookie for the middleware to read
+        document.cookie = `session-token=true; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
         try {
           await syncUserToFirestore(user);
         } catch (error) {
           console.error("Error syncing user to Firestore:", error);
         }
+      } else {
+        // Remove the cookie if logged out
+        document.cookie = "session-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax";
       }
       setLoading(false);
     });
