@@ -43,7 +43,9 @@ export async function POST(req: NextRequest) {
         "keyConcepts": ["Important Point 1", ...],
         "formulas": ["Relevant Formula", ...],
         "examples": ["Illustration from text", ...],
-        "examQuestions": ["Likely question based on this PDF", ...]
+        "examQuestions": [
+          { "question": "Likely question based on this PDF", "answer": "Detailed model answer" }
+        ]
       }
     `;
 

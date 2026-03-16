@@ -21,6 +21,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
 type UploadStage = "idle" | "uploading" | "analyzing" | "success";
@@ -102,6 +103,17 @@ export default function UploadPdfPage() {
   };
 
   const { user } = useAuth();
+  const router = useRouter();
+
+  // Auto-redirect after success
+  useEffect(() => {
+    if (stage === "success" && generatedNoteId) {
+      const timer = setTimeout(() => {
+        router.push(`/dashboard/notes?id=${generatedNoteId}`);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [stage, generatedNoteId, router]);
 
   const startProcess = async () => {
     if (!file || !user) return;
@@ -333,7 +345,8 @@ export default function UploadPdfPage() {
                       <FileCheck className="w-16 h-16" />
                     </div>
                     <h3 className="text-4xl font-black text-gray-900 mb-4">Study Guide Ready!</h3>
-                    <p className="text-gray-500 font-bold mb-10 leading-relaxed">We've extracted 12 key points, 8 flashcards, and 5 practice questions from your document.</p>
+                    <p className="text-gray-500 font-bold mb-4 leading-relaxed">We've extracted 12 key points, 8 flashcards, and 5 practice questions from your document.</p>
+                    <p className="text-[#F9A11B] font-black text-xs uppercase tracking-[0.2em] mb-10 animate-pulse">Redirecting to Notes in 3s...</p>
                     
                     <div className="grid grid-cols-2 gap-4 w-full mb-10">
                         <div className="p-5 bg-gray-50 rounded-3xl text-left border border-gray-100">
