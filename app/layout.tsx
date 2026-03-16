@@ -18,6 +18,10 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: "AI Notes Generator | Smart Study Notes for Students",
   description: "Instantly generate smart study notes, flashcards, and question sets using AI. Designed for class 8-12 students.",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 import { AuthProvider } from "@/context/AuthContext";
