@@ -17,6 +17,28 @@ import {
 import { db } from "./firebase";
 
 // --- Users & Usage ---
+export async function updateUserProfile(userId: string, data: any) {
+  const userRef = doc(db, "users", userId);
+  try {
+    await updateDoc(userRef, data);
+  } catch (error) {
+    console.error("updateUserProfile: Error updating profile.", error);
+    throw error;
+  }
+}
+
+export async function getUserProfile(userId: string) {
+  const userRef = doc(db, "users", userId);
+  try {
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+      return userSnap.data();
+    }
+  } catch (error) {
+    console.error("getUserProfile: Error fetching profile.", error);
+  }
+  return null;
+}
 
 export async function syncUserToFirestore(user: any) {
   const userRef = doc(db, "users", user.uid);

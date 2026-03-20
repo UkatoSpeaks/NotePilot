@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/request';
+import type { NextRequest } from 'next/server';
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const sessionToken = request.cookies.get('session-token')?.value;
 
@@ -16,7 +16,7 @@ export function middleware(request: NextRequest) {
   // 2. Authentication Guard: Protect dashboard routes
   if (pathname.startsWith('/dashboard')) {
     if (sessionToken !== 'true') {
-      // Save the attempted URL to redirect back after login (optional UX juice)
+      // Save the attempted URL to redirect back after login
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('callbackUrl', pathname);
       return NextResponse.redirect(loginUrl);
@@ -35,14 +35,14 @@ export function middleware(request: NextRequest) {
     
     // Add custom header to track internal requests
     const response = NextResponse.next();
-    response.headers.set('X-NotePilot-Source', 'middleware-verified');
+    response.headers.set('X-NotePilot-Source', 'proxy-verified');
     return response;
   }
 
   return NextResponse.next();
 }
 
-// Config to specify which paths the middleware runs on
+// Config to specify which paths the proxy runs on
 export const config = {
   matcher: [
     '/dashboard/:path*',

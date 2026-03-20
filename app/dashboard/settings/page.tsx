@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import { 
   User, 
   Bell, 
@@ -18,26 +20,51 @@ import {
   Lock,
   Globe,
   Loader2,
-  BookOpen
+  BookOpen,
+  Edit2,
+  Check
 } from "lucide-react";
+import { updateProfile } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { getUserProfile, updateUserProfile } from "@/lib/firestore";
 
 type SettingsTab = "profile" | "preferences" | "notifications" | "security";
 
 export default function SettingsPage() {
+  const searchParams = useSearchParams();
+  const { user } = useAuth();
+  const tabParam = searchParams.get("tab") as SettingsTab;
+
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
   const [isSaving, setIsSaving] = useState(false);
   const [showSaved, setShowSaved] = useState(false);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+
+  // Curated student avatars (Teenagers/Students for Class 8-12 style)
+  const avatarOptions = [
+    `https://api.dicebear.com/7.x/avataaars/svg?seed=Oliver`,
+    `https://api.dicebear.com/7.x/avataaars/svg?seed=Willow`,
+    `https://api.dicebear.com/7.x/avataaars/svg?seed=Styles`,
+    `https://api.dicebear.com/7.x/avataaars/svg?seed=Aiden`,
+    `https://api.dicebear.com/7.x/avataaars/svg?seed=Luna`,
+    `https://api.dicebear.com/7.x/avataaars/svg?seed=Leo`,
+    `https://api.dicebear.com/7.x/avataaars/svg?seed=Maya`,
+    `https://api.dicebear.com/7.x/avataaars/svg?seed=Jasper`,
+    `https://api.dicebear.com/7.x/avataaars/svg?seed=Zoe`,
+    `https://api.dicebear.com/7.x/avataaars/svg?seed=Kai`
+  ];
 
   // States for various settings
   const [profile, setProfile] = useState({
-    name: "Anurag",
-    email: "anurag@example.com",
+    name: user?.displayName || "Student",
+    email: user?.email || "",
     class: "12",
     school: "Central High School",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Anurag"
+    avatar: user?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'User'}`
   });
 
   const [aiPrefs, setAiPrefs] = useState({
@@ -53,13 +80,63 @@ export default function SettingsPage() {
     newFeatures: true
   });
 
-  const handleSave = () => {
+  useEffect(() => {
+    if (tabParam && ["profile", "preferences", "notifications", "security"].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
+
+  useEffect(() => {
+    if (user) {
+      getUserProfile(user.uid).then(data => {
+         if (data) {
+            setProfile({
+                name: data.name || user.displayName || "Student",
+                email: data.email || user.email || "",
+                class: data.class || "12",
+                school: data.school || "Not set",
+                avatar: data.photoURL || user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email || 'User'}`
+            });
+            if (data.aiPrefs) setAiPrefs((prev: any) => ({...prev, ...data.aiPrefs}));
+            if (data.notificationPrefs) setNotificationPrefs((prev: any) => ({...prev, ...data.notificationPrefs}));
+         }
+      });
+    }
+  }, [user]);
+
+  const handleSave = async () => {
+    if (!user) return;
     setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
-      setShowSaved(true);
-      setTimeout(() => setShowSaved(false), 3000);
-    }, 1500);
+    try {
+        // 1. Update Firestore
+        await updateUserProfile(user.uid, {
+            name: profile.name,
+            class: profile.class,
+            school: profile.school,
+            photoURL: profile.avatar,
+            aiPrefs,
+            notificationPrefs
+        });
+
+        // 2. Update Firebase Auth Display Name & Photo for consistency
+        if (auth.currentUser) {
+          const updates: any = {};
+          if (profile.name !== user.displayName) updates.displayName = profile.name;
+          if (profile.avatar !== user.photoURL) updates.photoURL = profile.avatar;
+          
+          if (Object.keys(updates).length > 0) {
+            await updateProfile(auth.currentUser, updates);
+          }
+        }
+
+        setShowSaved(true);
+        setIsEditingProfile(false);
+        setTimeout(() => setShowSaved(false), 3000);
+    } catch (error) {
+        console.error("Failed to save settings:", error);
+    } finally {
+        setIsSaving(false);
+    }
   };
 
   const tabs = [
@@ -154,27 +231,47 @@ export default function SettingsPage() {
                             exit={{ opacity: 0, x: -20 }}
                             className="space-y-10"
                         >
-                            <div className="flex flex-col sm:flex-row items-center gap-10">
-                                <div className="relative group">
-                                    <div className="w-40 h-40 rounded-[48px] overflow-hidden bg-indigo-50 border-4 border-white shadow-2xl relative">
-                                        <img src={profile.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-10">
+                                <div className="flex flex-col sm:flex-row items-center gap-10">
+                                    <div className="relative group">
+                                        <div className="w-40 h-40 rounded-[48px] overflow-hidden bg-indigo-50 border-4 border-white shadow-2xl relative">
+                                            <img src={profile.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                                        </div>
+                                        <button 
+                                            disabled={!isEditingProfile}
+                                            onClick={() => setIsAvatarModalOpen(true)}
+                                            className={cn(
+                                                "absolute -bottom-4 -right-4 w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-xl border-4 border-white transition-all",
+                                                isEditingProfile ? "hover:scale-110 opacity-100" : "opacity-0 scale-90 pointer-events-none"
+                                            )}
+                                        >
+                                            <Palette className="w-5 h-5" />
+                                        </button>
                                     </div>
-                                    <button className="absolute -bottom-4 -right-4 w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-xl border-4 border-white hover:scale-110 transition-transform">
-                                        <Palette className="w-5 h-5" />
-                                    </button>
+                                    <div className="space-y-2 text-center sm:text-left">
+                                        <h3 className="text-3xl font-black text-gray-900">{profile.name}</h3>
+                                        <p className="text-indigo-600 font-black uppercase tracking-widest text-xs">Standard Student Account</p>
+                                        <p className="text-gray-400 font-bold">{profile.email}</p>
+                                    </div>
                                 </div>
-                                <div className="space-y-2 text-center sm:text-left">
-                                    <h3 className="text-3xl font-black text-gray-900">{profile.name}</h3>
-                                    <p className="text-indigo-600 font-black uppercase tracking-widest text-xs">Standard Student Account</p>
-                                    <p className="text-gray-400 font-bold">{profile.email}</p>
-                                </div>
+
+                                <Button 
+                                    onClick={() => isEditingProfile ? handleSave() : setIsEditingProfile(true)}
+                                    className={cn(
+                                        "rounded-2xl h-14 px-8 font-black shadow-xl transition-all flex items-center gap-2",
+                                        isEditingProfile ? "bg-green-600 hover:bg-green-700 text-white" : "bg-gray-100 hover:bg-white text-gray-600 border border-gray-200"
+                                    )}
+                                >
+                                    {isEditingProfile ? <Check className="w-5 h-5" /> : <Edit2 className="w-5 h-5" />}
+                                    {isEditingProfile ? "Confirm Changes" : "Edit Profile"}
+                                </Button>
                             </div>
 
                             <div className="grid md:grid-cols-2 gap-8 pt-6">
-                                <InputField label="Full Name" value={profile.name} onChange={(v) => setProfile({...profile, name: v})} icon={<User className="w-5 h-5" />} />
-                                <InputField label="Email Address" value={profile.email} onChange={(v) => setProfile({...profile, email: v})} icon={<Mail className="w-5 h-5" />} />
-                                <InputField label="Grade / Class" value={profile.class} onChange={(v) => setProfile({...profile, class: v})} icon={<BookOpen className="w-5 h-5" />} />
-                                <InputField label="School / College" value={profile.school} onChange={(v) => setProfile({...profile, school: v})} icon={<Globe className="w-5 h-5" />} />
+                                <InputField label="Full Name" value={profile.name} onChange={(v) => setProfile({...profile, name: v})} icon={<User className="w-5 h-5" />} disabled={!isEditingProfile} />
+                                <InputField label="Email Address" value={profile.email} onChange={(v) => {}} icon={<Mail className="w-5 h-5" />} disabled={true} />
+                                <InputField label="Grade / Class" value={profile.class} onChange={(v) => setProfile({...profile, class: v})} icon={<BookOpen className="w-5 h-5" />} disabled={!isEditingProfile} />
+                                <InputField label="School / College" value={profile.school} onChange={(v) => setProfile({...profile, school: v})} icon={<Globe className="w-5 h-5" />} disabled={!isEditingProfile} />
                             </div>
                         </motion.div>
                     )}
@@ -343,23 +440,94 @@ export default function SettingsPage() {
             </div>
         </div>
       </div>
+
+      {/* Avatar Selection Modal */}
+      <AnimatePresence>
+        {isAvatarModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-6 pb-20 md:pb-6">
+                <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setIsAvatarModalOpen(false)}
+                    className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                />
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                    className="relative w-full max-w-2xl bg-white rounded-[40px] shadow-2xl overflow-hidden border border-gray-100"
+                >
+                    <div className="p-8 border-b border-gray-50 flex items-center justify-between">
+                        <div>
+                            <h3 className="text-2xl font-black text-gray-900">Select Your Avatar</h3>
+                            <p className="text-sm font-bold text-gray-400">Pick a style that represents you best.</p>
+                        </div>
+                        <button 
+                            onClick={() => setIsAvatarModalOpen(false)}
+                            className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-red-50 hover:text-red-500 transition-all"
+                        >
+                            <LogOut className="w-5 h-5 rotate-180" />
+                        </button>
+                    </div>
+                    
+                    <div className="p-8 grid grid-cols-2 sm:grid-cols-5 gap-4 overflow-y-auto max-h-[60vh]">
+                        {avatarOptions.map((avatar, idx) => (
+                            <button
+                                key={idx}
+                                onClick={() => {
+                                    setProfile({...profile, avatar});
+                                    setIsAvatarModalOpen(false);
+                                }}
+                                className={cn(
+                                    "aspect-square rounded-3xl border-4 transition-all overflow-hidden relative group",
+                                    profile.avatar === avatar ? "border-indigo-600 bg-indigo-50 shadow-lg shadow-indigo-100" : "border-gray-50 hover:border-indigo-200 bg-gray-50"
+                                )}
+                            >
+                                <img src={avatar} alt={`Avatar ${idx}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                                {profile.avatar === avatar && (
+                                    <div className="absolute top-2 right-2 w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-md">
+                                        <Check className="w-3.5 h-3.5" />
+                                    </div>
+                                )}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="p-8 bg-gray-50 flex justify-end">
+                        <Button 
+                            onClick={() => setIsAvatarModalOpen(false)}
+                            className="bg-white text-gray-900 hover:bg-gray-100 rounded-2xl h-12 px-8 font-black border border-gray-200"
+                        >
+                            Done
+                        </Button>
+                    </div>
+                </motion.div>
+            </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-function InputField({ label, value, onChange, icon }: { label: string, value: string, onChange: (v: string) => void, icon?: React.ReactNode }) {
+function InputField({ label, value, onChange, icon, disabled }: { label: string, value: string, onChange: (v: string) => void, icon?: React.ReactNode, disabled?: boolean }) {
     return (
-        <div className="space-y-4 group">
+        <div className={cn("space-y-4 group", disabled && "opacity-60")}>
             <label className="text-xs font-black text-gray-400 uppercase tracking-widest pl-1">{label}</label>
             <div className="relative">
-                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors">
+                <div className={cn("absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors", disabled && "group-focus-within:text-gray-400")}>
                     {icon}
                 </div>
                 <input 
                     type="text" 
                     value={value}
+                    disabled={disabled}
                     onChange={(e) => onChange(e.target.value)}
-                    className="w-full bg-gray-50 border-2 border-transparent focus:border-indigo-600/20 focus:bg-white rounded-2xl py-5 pl-14 pr-4 font-bold text-gray-800 outline-none transition-all shadow-sm"
+                    className={cn(
+                        "w-full bg-gray-50 border-2 border-transparent rounded-2xl py-5 pl-14 pr-4 font-bold text-gray-800 outline-none transition-all shadow-sm",
+                        !disabled && "focus:border-indigo-600/20 focus:bg-white cursor-text",
+                        disabled && "cursor-not-allowed"
+                    )}
                 />
             </div>
         </div>

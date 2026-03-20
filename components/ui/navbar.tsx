@@ -11,12 +11,14 @@ import {
   Settings
 } from "lucide-react";
 import { Button } from "./button";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { getUserUsage } from "@/lib/firestore";
 
 export function Navbar() {
   const { user, logout } = useAuth();
+  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [usage, setUsage] = useState<any>(null);
 
@@ -90,10 +92,22 @@ export function Navbar() {
                   <p className="text-sm font-bold text-gray-900 truncate">{user?.email}</p>
                 </div>
                 
-                <button className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors">
+                <button 
+                  onClick={() => {
+                    router.push("/dashboard/settings?tab=profile");
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+                >
                   <UserIcon className="w-4 h-4" /> Profile Details
                 </button>
-                <button className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors">
+                <button 
+                  onClick={() => {
+                    router.push("/dashboard/settings?tab=preferences");
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+                >
                   <Settings className="w-4 h-4" /> Account Settings
                 </button>
                 

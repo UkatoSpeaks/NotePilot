@@ -3,7 +3,8 @@ import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { 
   getFirestore, 
   initializeFirestore, 
-  enableMultiTabIndexedDbPersistence,
+  persistentLocalCache, 
+  persistentMultipleTabManager,
   CACHE_SIZE_UNLIMITED
 } from "firebase/firestore";
 
@@ -20,33 +21,26 @@ const firebaseConfig = {
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// Initialize Firestore with settings to bypass restrictive networks
+// Initialize Firestore
 let db: any;
-if (getApps().length === 0) {
-  db = initializeFirestore(app, {
-    experimentalAutoDetectLongPolling: true,
-    cacheSizeBytes: CACHE_SIZE_UNLIMITED
-  });
-} else {
+
+if (typeof window !== "undefined") {
   try {
+    // Initialize Firestore with persistent local cache on the client side
     db = initializeFirestore(app, {
-      experimentalAutoDetectLongPolling: true,
-      cacheSizeBytes: CACHE_SIZE_UNLIMITED
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager(),
+        cacheSizeBytes: CACHE_SIZE_UNLIMITED
+      }),
+      experimentalAutoDetectLongPolling: true
     });
   } catch (e) {
+    // If Firestore is already initialized (hot reload or multi-instance), use getFirestore
     db = getFirestore(app);
   }
-}
-
-// Enable offline persistence (Client-side only)
-if (typeof window !== "undefined") {
-  enableMultiTabIndexedDbPersistence(db).catch((err) => {
-    if (err.code === "failed-precondition") {
-      console.warn("Firestore persistence failed: Multiple tabs open.");
-    } else if (err.code === "unimplemented") {
-      console.warn("Firestore persistence unsupported in this browser.");
-    }
-  });
+} else {
+  // Server side initialization
+  db = getFirestore(app);
 }
 
 const googleProvider = new GoogleAuthProvider();
